@@ -1,0 +1,38 @@
+body {
+    background-color: #3b3c40;
+    color: white;
+    font-size: 12pt;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#chatbox {
+    background-color: #262629;
+    height: 700px;
+    width: 50%;
+    border: solid 1px #4d4d4d;
+    border-radius: 5px;
+    overflow: auto;
+    float: left;
+}
+
+#message-container {
+    height: 400px;
+}
+
+.message {
+    border-bottom: solid 1px #4d4d4d;
+    padding: 10px;
+}
+#message-container div, #message-container h2, #message-container span {
+    background-color: #2b2c35;
+    margin: 0;
+}
+
+.lightgrey {
+    color: grey;
+}
+
+#userListContainer {
+    background-color: #5f6066;
+
+}

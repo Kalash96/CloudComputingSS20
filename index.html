@@ -2,39 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width", initialscale=1.0">
+    <meta name="viewport" content="width=device-width", initialscale="1.0">
     <meta http-equiv="X-UA-Compatile" content="ie=edge">
     <title>Chat</title>
     <script defer src="http://localhost:3000/socket.io/socket.io.js"></script>
     <script defer src="client.js"></script>
-    <style>
-        body{
-            padding: 0;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-        }
-        #message-container{
-            width: 80%;
-            max-width: 1200px;
-        }
-
-        #message-container div {
-            background-color: #cccccc;
-            padding: 5px;
-        }
-        #message-container div:nth-child(2n){
-            background-color: #FFFFFF;
-        }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="message-container"></div><br>
-<form id="send-container">
-    <input type="text" id="message-input">
-    <button type="submit" id="send_button">Send</button>
-</form>
+    <div id="chatbox">
+        <div id="message-container"></div>
+    </div>
+    <br>
+    <form id="send-container">
+        <input type="text" id="message-input">
+        <button type="submit" id="send_button">Send</button>
+    </form>
+
+
+    <div id="userListContainer">
+        <p>User Liste:</p>
+        <ul id="userList"></ul>
+    </div>
 
 </body>
 </html>
