@@ -15,6 +15,10 @@ socket.on('chat-message', data => {
     appendMessage(data.name, data.message)
 })
 
+socket.on('private-chat-message', data => {
+    //TODO opens the chat window and displays the message
+})
+
 socket.on('user-connected', info => {
     appendStaticMessage(info.username + ' connected')
     refreshUserList(info.userlist)
@@ -53,7 +57,7 @@ function createMessageHeader(username) {
     name.innerHTML = username
     header.append(name)
 
-    var time = new Date().toLocaleTimeString();
+    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     let timestamp = document.createElement('span')
     timestamp.style.fontSize = '9pt'
     timestamp.classList.add('lightgrey')
@@ -88,10 +92,19 @@ function appendStaticMessage(message) {
 }
 
 function refreshUserList(users) {
-    userList.innerHTML = ''; //clear
+    userList.innerHTML = ''; //clear the list
     for(let id in users) {
         let listElement = document.createElement('li')    
         listElement.innerText = users[id]
         userList.appendChild(listElement)
+
+        listElement.ondblclick = () => {
+            openPrivateChat(id)
+        }
     }
+}
+
+function openPrivateChat(id) {
+    //TODO
+    socket.emit('send-private-chat-message', id, 'example message')
 }

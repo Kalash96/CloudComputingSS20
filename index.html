@@ -15,14 +15,22 @@
     </div>
     <br>
     <form id="send-container">
-        <input type="text" id="message-input">
-        <button type="submit" id="send_button">Send</button>
+        <input type="text" id="message-input" placeholder="Nachricht...">
+        <button type="submit" id="send-button">Send</button>
     </form>
 
 
-    <div id="userListContainer">
-        <p>User Liste:</p>
+    <div id="user-list-container">
+        <p style="font-size: 15pt; margin: 0;">User list</p>
         <ul id="userList"></ul>
+    </div>
+
+    <!-- TODO create dynamically -->
+    <div class="private-chat-window">
+        <div class="private-chat-window-header">
+            <h2>Username</h2>
+            <h2 id="closeChatWindow">&#10006;</h2>
+        </div>
     </div>
 
 </body>

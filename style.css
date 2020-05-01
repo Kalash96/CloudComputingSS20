@@ -1,16 +1,17 @@
-body {
+html, body {
     background-color: #3b3c40;
     color: white;
     font-size: 12pt;
     font-family: Arial, Helvetica, sans-serif;
+    height: 100%;
 }
 
 #chatbox {
     background-color: #262629;
-    height: 700px;
+    height: 93%;
     width: 50%;
     border: solid 1px #4d4d4d;
-    border-radius: 5px;
+    border-radius: 10px;
     overflow: auto;
     float: left;
 }
@@ -32,7 +33,67 @@ body {
     color: grey;
 }
 
-#userListContainer {
-    background-color: #5f6066;
+#send-container {
+    position: absolute;
+    bottom: 0;
+    width: 48%;
+}
 
+#user-list-container {
+    background-color: #262629;
+    position: absolute;
+    right: 0;
+    width: 44%;
+    height: 400px;
+    padding: 1em;
+    border: solid 1px #4d4d4d;
+    border-radius: 10px;
+    overflow: auto;
+}
+
+#user-list-container ul{
+    list-style-type: none;
+    padding: 0;
+}
+
+#user-list-container li{
+    padding: 10px;
+}
+
+#user-list-container li:hover{
+    background-color: #4d4d4d;
+    cursor: pointer;
+}
+
+
+#message-input {
+    width: 100%;
+    background-color: #616161;
+    list-style: none;
+    padding: 7px;
+    border: solid 1px #262629;
+    border-radius: 10px;
+    color: white;
+}
+
+.private-chat-window {
+    position: absolute;
+    bottom: 0;
+    background-color: #262629;
+    height: 300px;
+    width: 300px;
+    right: 0;
+    border: solid 1px #4d4d4d;
+    border-radius: 10px;
+    margin-right: 10em;
+}
+
+.private-chat-window h2 {
+    font-size: 12pt;
+    display: inline;
+    margin: 10px;
+}
+
+#closeChatWindow {
+    float: right;
 }

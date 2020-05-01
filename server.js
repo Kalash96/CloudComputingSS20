@@ -19,5 +19,10 @@ io.on('connection', socket => {
         delete users[socket.id]
         socket.broadcast.emit('user-disconnected', {username: name, userlist: users})
     })
+
+    socket.on('send-private-chat-message', (id, message) => {
+        console.log(id + " " + message)
+        io.to(id).emit('private-chat-message', {message: message, name: users[socket.id]})
+    })
 })
 
