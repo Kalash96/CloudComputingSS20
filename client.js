@@ -22,7 +22,7 @@ socket.on('user-connected', info => {
 
 socket.on('user-disconnected', user => {
     if(user.username != null) {
-        appendStaticMessage(name + ' disconnected')
+        appendStaticMessage(user.username + ' disconnected')
         refreshUserList(user.userlist)
     }
 })
