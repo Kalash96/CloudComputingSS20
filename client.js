@@ -97,14 +97,94 @@ function refreshUserList(users) {
         let listElement = document.createElement('li')    
         listElement.innerText = users[id]
         userList.appendChild(listElement)
-
+        
         listElement.ondblclick = () => {
-            openPrivateChat(id)
+
+            openPrivateChat(id, users[id])
         }
     }
 }
 
-function openPrivateChat(id) {
+function openPrivateChat(id, userName) {
     //TODO
+    /**make the window for the private chatroom*/
+    const privateChat = document.createElement('div')
+    privateChat.classList.add('private-chat-window')
+    privateChat.id = "private-chats-areas"
+    document.body.appendChild(privateChat)
+
+    /**make the header for the private chatroom window*/
+    const privateChatHeader = document.createElement('div')
+    privateChatHeader.classList.add('private-chats-areasheader')
+
+    /**the name of the private chatroom window should be the name from the user in the list (in the header) */
+    const privateChatTitle = document.createElement('h2')
+    privateChatTitle.id = "private-chat-tiltle"
+    const userNameText = document.createTextNode(userName)
+    privateChatTitle.appendChild(userNameText)
+
+    /**the close button for the window of the chatroom */
+    const closeButton = document.createElement('h2')
+    closeButton.id = "closeChatWindow"
+    const closeButtonText = document.createTextNode("Close")
+    closeButton.appendChild(closeButtonText)
+
+    /**add the tiltle and the button as h2 to the header of the window*/
+    privateChatHeader.appendChild(privateChatTitle)
+    privateChatHeader.appendChild(closeButton)
+
+    /**add the header to the window*/
+    privateChat.append(privateChatHeader)
+
+    /**define the function of the close button. the window of the private room should be closed with the button  */
+    closeButton.onclick = () => {
+        privateChat.style.display = 'none'
+    }
+
+    /**make the private room window draggable*/
+    dragElement(privateChat) 
     socket.emit('send-private-chat-message', id, 'example message')
+}
+
+
+//make a element with a header movable (e.g. div)
+function dragElement(elmnt) {
+    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    if (document.getElementById(elmnt.id + "header")) {
+        /* if present, the header is where you move the DIV from:*/
+        document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+    } else {
+        /* otherwise, move the DIV from anywhere inside the DIV:*/
+        elmnt.onmousedown = dragMouseDown;
+    }
+
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // get the mouse cursor position at startup:
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // set the element's new position:
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+        /* stop moving when mouse button is released:*/
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
 }
