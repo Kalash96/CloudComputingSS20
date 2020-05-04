@@ -11,8 +11,26 @@ socket.on('connected', data => {
     refreshUserList(data)
 })
 
-socket.on('chat-message', data => {
-    appendMessage(data.name, data.message)
+socket.on('chat-message', async data => {
+    let msg = appendMessage(data.name, data.message.message)
+    let files = []
+    for(let url of data.message.fileList){
+        await fetch(url.data)
+        .then(res => res.blob())
+        .then(blob => {
+            let dataType = url.data.substring(5).split(';')[0]
+            const file = new File([blob], url.name, { type: dataType})
+            files.push(file)
+        })
+    }
+    let fileList = getFilesAsHtmlElements(files);
+    if(fileList.length > 0) {
+        msg.append(document.createElement('br'))
+        for(let i = 0; i < fileList.length; i++) {
+            msg.append(fileList[i])
+            msg.append(document.createElement('br'))
+        }
+    }
 })
 
 socket.on('private-chat-message', data => {
@@ -31,15 +49,116 @@ socket.on('user-disconnected', user => {
     }
 })
 
-messageForm.addEventListener('submit', e => {
+messageForm.addEventListener('submit', async e => {
     e.preventDefault();
     const message = messageInput.value
+    let fileList = getFilesAsHtmlElements(document.getElementById('file-upload').files)
+    let fileListB64 = await getBase64FilesList()
+
+    let msg = null
     if(message.length > 0) {
-        appendMessage('You', message)
-        socket.emit('send-chat-message', message)
+        msg = appendMessage('You', message)
+    }
+    //if only a file is submitted, the message stays empty
+    else if(message.length == 0 && fileList.length > 0) {
+        msg = appendMessage('You', '')
+    }
+    messageInput.value = ''
+    //send the message to server with the files as an B64 encoded list
+    socket.emit('send-chat-message', {message: message, fileList: fileListB64})
+
+    if(fileList.length > 0) {
+        //reset the input fields
         messageInput.value = ''
+        document.getElementById('file-upload').value = ''
+        
+        //display the files in the chat
+        msg.append(document.createElement('br'))
+        for(let i = 0; i < fileList.length; i++) {
+            msg.append(fileList[i])
+            msg.append(document.createElement('br'))
+        }
     }
 })
+
+//returns a promise of a file that is converted into Base64 encoding
+ function getBase64(file, onLoadCallback) {
+    return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function() { resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+//returns a list of all Base64 encoded input files from the file upload
+async function getBase64FilesList() {
+    let files = []
+    let fileInput = document.getElementById('file-upload').files
+    let promises = []
+    for(let file of fileInput) {
+        let promise = getBase64(file)
+        promise.then(function(result) {
+            files.push({name: file.name, data: result})
+        });
+        promises.push(promise)
+    }
+    await Promise.all(promises)
+    return files;
+ }
+
+//returns a list of the submited files in suited html formatted containers for
+//image, video, audio and files
+function getFilesAsHtmlElements(files) {
+    let fileList = []
+    let fileInput = files
+    for(let file of fileInput) {
+        if (file.type.startsWith('image/')){ 
+            const img = document.createElement("img")
+            img.style.maxHeight = '500px'
+            img.style.maxWidth = '500px'
+            img.classList.add('obj')
+            img.file = file
+            fileList.push(img)
+    
+            const reader = new FileReader();
+            reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result; }; })(img);
+            reader.readAsDataURL(file);
+        }else if(file.type.startsWith('video/')) {
+            const vid = document.createElement('video')
+            vid.style.maxHeight = '500px'
+            vid.style.maxWidth = '500px'
+            vid.controls = true
+            
+            let promise = getBase64(file)
+            promise.then(function(result) {
+                vid.src = result;
+            });
+            fileList.push(vid)
+        }else if(file.type.startsWith('audio/')) {
+            const audio = document.createElement('audio')
+            audio.controls = true
+            let promise = getBase64(file)
+            promise.then(function(result) {
+                audio.src = result;
+            });
+            fileList.push(audio)
+        }else {
+            const fileContainer = document.createElement('div')
+            const link = document.createElement('a')
+            link.download = file.name
+            let promise = getBase64(file)
+            promise.then(function(result) {
+                link.href = result;
+            });
+           
+            link.text = file.name
+            fileContainer.append(link)
+            fileList.push(fileContainer)
+        }
+    }
+    return fileList;
+}
 
 function showUsernamePrompt() {
     const name = prompt('What is your name?')
@@ -67,6 +186,7 @@ function createMessageHeader(username) {
     return header
 }
 
+
 function appendMessage(username, text) {
     let header = createMessageHeader(username)
 
@@ -80,6 +200,7 @@ function appendMessage(username, text) {
     message.append(content)
 
     messageContainer.append(message)
+    return message
 }
 
 function appendStaticMessage(message) {
