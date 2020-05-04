@@ -17,12 +17,13 @@
     <form id="send-container">
         <input type="text" id="message-input" placeholder="Nachricht...">
         <button type="submit" id="send-button">Send</button>
-        <input type="file" multiple="true" id="file-upload">
+        <button id="bt_upload" onClick="document.getElementById('file-upload').click(); return false"></button>
+        <input type="file" multiple="true" id="file-upload" onchange="getFileName()">
     </form>
 
 
     <div id="user-list-container">
-        <p style="font-size: 15pt; margin: 0;">User list</p>
+        <p style="font-size: 15pt; margin: 0;">A</p>
         <ul id="userList"></ul>
     </div>
 

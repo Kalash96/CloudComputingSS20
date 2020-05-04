@@ -19,6 +19,7 @@ socket.on('chat-message', async data => {
         .then(res => res.blob())
         .then(blob => {
             let dataType = url.data.substring(5).split(';')[0]
+            urlName = url.name
             const file = new File([blob], url.name, { type: dataType})
             files.push(file)
         })
@@ -91,6 +92,7 @@ messageForm.addEventListener('submit', async e => {
     });
 }
 
+var fileName;
 //returns a list of all Base64 encoded input files from the file upload
 async function getBase64FilesList() {
     let files = []
@@ -99,6 +101,7 @@ async function getBase64FilesList() {
     for(let file of fileInput) {
         let promise = getBase64(file)
         promise.then(function(result) {
+            fileName = file.name
             files.push({name: file.name, data: result})
         });
         promises.push(promise)
@@ -159,6 +162,12 @@ function getFilesAsHtmlElements(files) {
     }
     return fileList;
 }
+
+function getFileName () {
+    var fileName = document.getElementById('file-upload')
+    var file_text = fileName.files.item(0).name
+    console.log('file: ', file_text)
+};
 
 function showUsernamePrompt() {
     const name = prompt('What is your name?')
@@ -307,5 +316,9 @@ function dragElement(elmnt) {
         /* stop moving when mouse button is released:*/
         document.onmouseup = null;
         document.onmousemove = null;
+    }
+
+    function readFileName(){
+        return fileName;
     }
 }
