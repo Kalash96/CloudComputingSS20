@@ -123,3 +123,13 @@ html, body {
     margin-left: 0.5rem;
 }
 
+.attachment {
+    background-color: #262629;
+    color: white;
+    margin: 0 3px 0 0;
+    padding: 5px;
+    display: inline-block;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: black;
+}

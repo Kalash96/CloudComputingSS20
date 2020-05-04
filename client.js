@@ -19,7 +19,6 @@ socket.on('chat-message', async data => {
         .then(res => res.blob())
         .then(blob => {
             let dataType = url.data.substring(5).split(';')[0]
-            urlName = url.name
             const file = new File([blob], url.name, { type: dataType})
             files.push(file)
         })
@@ -65,6 +64,7 @@ messageForm.addEventListener('submit', async e => {
         msg = appendMessage('You', '')
     }
     messageInput.value = ''
+
     //send the message to server with the files as an B64 encoded list
     socket.emit('send-chat-message', {message: message, fileList: fileListB64})
 
@@ -72,6 +72,9 @@ messageForm.addEventListener('submit', async e => {
         //reset the input fields
         messageInput.value = ''
         document.getElementById('file-upload').value = ''
+        //reset attachment list
+        let fileNamesContainer = document.getElementById('files')
+        fileNamesContainer.innerHTML = ''
         
         //display the files in the chat
         msg.append(document.createElement('br'))
@@ -92,7 +95,6 @@ messageForm.addEventListener('submit', async e => {
     });
 }
 
-var fileName;
 //returns a list of all Base64 encoded input files from the file upload
 async function getBase64FilesList() {
     let files = []
@@ -101,7 +103,6 @@ async function getBase64FilesList() {
     for(let file of fileInput) {
         let promise = getBase64(file)
         promise.then(function(result) {
-            fileName = file.name
             files.push({name: file.name, data: result})
         });
         promises.push(promise)
@@ -164,9 +165,16 @@ function getFilesAsHtmlElements(files) {
 }
 
 function getFileName () {
-    var fileName = document.getElementById('file-upload')
-    var file_text = fileName.files.item(0).name
-    console.log('file: ', file_text)
+    let files = document.getElementById('file-upload').files
+    let fileNamesContainer = document.getElementById('files')
+    fileNamesContainer.innerHTML = ''
+
+    for(let i = 0; i < files.length; i++) {
+        let fileName = document.createElement('p')
+        fileName.classList.add('attachment')
+        fileName.innerHTML = files[i].name
+        fileNamesContainer.append(fileName)
+    }
 };
 
 function showUsernamePrompt() {
@@ -318,7 +326,4 @@ function dragElement(elmnt) {
         document.onmousemove = null;
     }
 
-    function readFileName(){
-        return fileName;
-    }
 }
