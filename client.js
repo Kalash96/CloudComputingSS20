@@ -275,7 +275,7 @@ function openPrivateChat(id, userName) {
         /**the close button for the window of the chatroom */
         const closeButton = document.createElement('h2')
         closeButton.id = "closeChatWindow"
-        const closeButtonText = document.createTextNode("Close")
+        const closeButtonText = document.createTextNode(String.fromCharCode(10006))
         closeButton.appendChild(closeButtonText)
 
         /**add the tiltle and the button as h2 to the header of the window*/
