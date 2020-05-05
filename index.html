@@ -24,18 +24,26 @@
 
 
     <div id="user-list-container">
-        <p style="font-size: 15pt; margin: 0;">A</p>
+        <p class="headline">Users</p>
         <ul id="userList"></ul>
+        <button id="createGroupButton" onclick="showCreateGroupWindow()">Gruppe erstellen</button>
+        
+        <br><br><br><br>
+
+        <p class="headline">Gruppen</p>
+        <ul id="groupList"></ul>
+
+        
     </div>
 
-    <!-- TODO create dynamically
-    <div class="private-chat-window" id="private-chats-area">
-        <div class="private-chat-window-header">
-            <h2>Private chat rooms</h2>
-            <!-- a button to close the private chats window 
-        <h2 id="closeChatWindows">&#10006;</h2>
-        </div>
+
+    <div id="createGroupModal" class="drop-shadow">
+        <span>Gruppe erstellen</span>
+        <h2 class="close-button" style="margin: 10px;" onclick="closeCreateGroupWindow()">&#10006;</h2>
+        <ul id="newGroupChatUserList">
+        </ul>
+        <button onclick="abortCreateGroup()">Abbrechen</button>
+        <button onclick="createGroup()">Erstellen</button>
     </div>
-    //-->
 </body>
 </html>

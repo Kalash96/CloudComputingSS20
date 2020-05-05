@@ -34,7 +34,11 @@ socket.on('chat-message', async data => {
 })
 
 socket.on('private-chat-message', data => {
-    //TODO opens the chat window and displays the message
+    // TODO opens the chat window and displays the message
+    // zeige das chatfenster
+    // im chatfenster kann man dann nachrichten senden  -> send-private-chat-message
+    // bei Schließung des fensters wird das fenster mit display: none versteckt
+    // falls das fenster schon exisiert wird es nicth neu erstellt sondern mit display: block wieder sichtbar gemacht
 })
 
 socket.on('user-connected', info => {
@@ -178,9 +182,13 @@ function getFileName () {
 };
 
 function showUsernamePrompt() {
-    const name = prompt('What is your name?')
+    let name = prompt('What is your name?')
+    while(!name) {
+        console.log("inv")
+        name = prompt('What is your name?')
+    }
+    console.log(name)
     appendStaticMessage(name + ', you joined')
-
     socket.emit('new-user', name)
 }
 
@@ -234,10 +242,11 @@ function refreshUserList(users) {
     for(let id in users) {
         let listElement = document.createElement('li')    
         listElement.innerText = users[id]
+        listElement.id = id
+        listElement.classList.add('list-item')
         userList.appendChild(listElement)
         
         listElement.ondblclick = () => {
-
             openPrivateChat(id, users[id])
         }
     }
@@ -258,7 +267,8 @@ function openPrivateChat(id, userName) {
     /**for new private chatroom windows*/
     else {
         const privateChat = document.createElement('div')
-        privateChat.classList.add('private-chat-window')
+        privateChat.classList.add('drop-shadow')
+        privateChat.classList.add('chat-window')
         privateChat.id = id.toString() + "-private-chats-areas"
         document.body.appendChild(privateChat)
 
@@ -274,7 +284,7 @@ function openPrivateChat(id, userName) {
 
         /**the close button for the window of the chatroom */
         const closeButton = document.createElement('h2')
-        closeButton.id = "closeChatWindow"
+        closeButton.classList.add('close-button')
         const closeButtonText = document.createTextNode(String.fromCharCode(10006))
         closeButton.appendChild(closeButtonText)
 
@@ -330,6 +340,9 @@ function dragElement(elmnt) {
         // set the element's new position:
         elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
         elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+
+        if(elmnt.style.top.startsWith('-')) elmnt.style.top = "0px"
+        if(elmnt.style.left.startsWith('-')) elmnt.style.left = "0px"
     }
 
     function closeDragElement() {
@@ -339,3 +352,150 @@ function dragElement(elmnt) {
     }
 
 }
+
+groupParticipants = {}
+function showCreateGroupWindow() {
+    const modal = document.getElementById('createGroupModal')
+    modal.style.display = 'block'
+    let groupUserList = document.getElementById('newGroupChatUserList')
+    groupUserList.innerHTML = ''
+    
+    let userListNodes = userList.childNodes
+    for(let i = 0; i < userListNodes.length; i++) {
+        let node = userListNodes[i].cloneNode(true)
+        node.onclick = () => {
+            if(node.style.backgroundColor != 'green'){
+                node.style.backgroundColor = 'green'
+                groupParticipants[node.id] = node.innerHTML
+            }else {
+                node.style.backgroundColor = ''
+                delete groupParticipants[node.id]
+            }
+            console.log(groupParticipants)
+        }
+        groupUserList.append(node)
+
+    }
+
+}
+
+function closeCreateGroupWindow() {
+    document.getElementById('createGroupModal').style.display = 'none'
+}
+
+function abortCreateGroup () {
+    closeCreateGroupWindow()
+    //clear the array
+    groupParticipants = {}
+}
+
+//stores all the current groups of the user (id/name)
+groups = {}
+function createGroup() {
+    if(Object.keys(groupParticipants).length <= 0) {
+        alert("Du musst zuerst Teilnehmer auswählen")
+    }else {
+        closeCreateGroupWindow()
+        let id  = 'id' + (new Date()).getTime(); //todo check if not used already
+        addGroupToList(id)
+
+        socket.emit('create-group', id, groups[id], groupParticipants)
+        openGroupChatWindow(id)
+        //reset
+        groupParticipants = {}
+    }
+}
+
+function addGroupToList(id) {
+    let groupList = document.getElementById('groupList')
+    let name = ''
+
+    //get all ids
+    let participants = Object.keys(groupParticipants)
+
+    //get the names of the id and add them to the name
+    // TODO IN THE MODAL TO CREATE GROUP THE NAME SHOULD BE ENTERED 
+    // AND MEMBERS SHOULD BE IN AN EXTRA LIST 
+    for(let i = 0; i < participants.length;i++) {
+        if(i < participants.length-1) {
+            name += groupParticipants[participants[i]] + ", "
+        }else {
+            name += groupParticipants[participants[i]]
+        }
+    }
+
+    let listItem = document.createElement('li')
+    listItem.id = id
+    listItem.classList.add('list-item')
+    listItem.innerHTML = name
+
+    //store the id and name for later reference
+    groups[id] = name
+    listItem.ondblclick = () => openGroupChatWindow(id)
+    groupList.append(listItem)
+}
+
+
+function openGroupChatWindow(id) {
+    windowId = id+'-chat'
+    let chat = document.getElementById(windowId)
+    if(chat) {
+        //showing
+        chat.style.display = 'block'
+    } else {
+        const chatWindow = document.createElement('div')
+        chatWindow.id = windowId
+        chatWindow.classList.add('drop-shadow')
+        chatWindow.classList.add('chat-window')
+        document.body.appendChild(chatWindow)
+
+        const title = document.createElement('h2')
+        title.innerHTML = groups[id]
+
+        const closeButton = document.createElement('h2')
+        closeButton.classList.add('close-button')
+        const closeButtonText = document.createTextNode(String.fromCharCode(10006))
+        closeButton.appendChild(closeButtonText)
+        closeButton.onclick = () => {
+            chatWindow.style.display = 'none'
+        }
+        
+        input = document.createElement('input')
+        input.type = 'text'
+        input.placeholder = 'Nachricht'
+
+        chatWindow.append(title)
+        chatWindow.append(closeButton)
+        chatWindow.append(input)
+
+        dragElement(chatWindow)
+    }
+}
+
+function deleteGroupChat(id) {
+    delete groups[id]
+    document.getElementById(id).remove()
+    document.getElementById(id+'-chat').remove()
+}
+
+//group id and name
+socket.on('new-group', data => {
+    groups[data.id] = data.name
+    openGroupChatWindow(data.id)
+
+    let groupList = document.getElementById('groupList')
+
+    let listItem = document.createElement('li')
+    listItem.id = data.id
+    listItem.classList.add('list-item')
+    listItem.innerHTML = data.name
+
+    listItem.ondblclick = () => openGroupChatWindow(data.id)
+    groupList.append(listItem)
+
+    socket.emit('join-group', data.id)
+})
+
+socket.on('group-chat-message', data => {
+    console.log(data)
+})
