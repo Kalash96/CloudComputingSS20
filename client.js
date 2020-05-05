@@ -246,42 +246,54 @@ function refreshUserList(users) {
 function openPrivateChat(id, userName) {
     //TODO
     /**make the window for the private chatroom*/
-    const privateChat = document.createElement('div')
-    privateChat.classList.add('private-chat-window')
-    privateChat.id = "private-chats-areas"
-    document.body.appendChild(privateChat)
+    var privateChat = document.getElementById(id.toString() + "-private-chats-areas")
 
-    /**make the header for the private chatroom window*/
-    const privateChatHeader = document.createElement('div')
-    privateChatHeader.classList.add('private-chats-areasheader')
-
-    /**the name of the private chatroom window should be the name from the user in the list (in the header) */
-    const privateChatTitle = document.createElement('h2')
-    privateChatTitle.id = "private-chat-tiltle"
-    const userNameText = document.createTextNode(userName)
-    privateChatTitle.appendChild(userNameText)
-
-    /**the close button for the window of the chatroom */
-    const closeButton = document.createElement('h2')
-    closeButton.id = "closeChatWindow"
-    const closeButtonText = document.createTextNode("Close")
-    closeButton.appendChild(closeButtonText)
-
-    /**add the tiltle and the button as h2 to the header of the window*/
-    privateChatHeader.appendChild(privateChatTitle)
-    privateChatHeader.appendChild(closeButton)
-
-    /**add the header to the window*/
-    privateChat.append(privateChatHeader)
-
-    /**define the function of the close button. the window of the private room should be closed with the button  */
-    closeButton.onclick = () => {
-        privateChat.style.display = 'none'
+    /**when the window was opened, then make the none window to block window */
+    if (privateChat) {
+        if (privateChat.style.display == "none") {
+            privateChat.style.display = "block"
+        }
     }
 
-    /**make the private room window draggable*/
-    dragElement(privateChat) 
-    socket.emit('send-private-chat-message', id, 'example message')
+    /**for new private chatroom windows*/
+    else {
+        const privateChat = document.createElement('div')
+        privateChat.classList.add('private-chat-window')
+        privateChat.id = id.toString() + "-private-chats-areas"
+        document.body.appendChild(privateChat)
+
+        /**make the header for the private chatroom window*/
+        const privateChatHeader = document.createElement('div')
+        privateChatHeader.classList.add('private-chats-areasheader')
+
+        /**the name of the private chatroom window should be the name from the user in the list (in the header) */
+        const privateChatTitle = document.createElement('h2')
+        privateChatTitle.id = "private-chat-tiltle"
+        const userNameText = document.createTextNode(userName)
+        privateChatTitle.appendChild(userNameText)
+
+        /**the close button for the window of the chatroom */
+        const closeButton = document.createElement('h2')
+        closeButton.id = "closeChatWindow"
+        const closeButtonText = document.createTextNode("Close")
+        closeButton.appendChild(closeButtonText)
+
+        /**add the tiltle and the button as h2 to the header of the window*/
+        privateChatHeader.appendChild(privateChatTitle)
+        privateChatHeader.appendChild(closeButton)
+
+        /**add the header to the window*/
+        privateChat.append(privateChatHeader)
+
+        /**define the function of the close button. the window of the private room should be closed with the button  */
+        closeButton.onclick = () => {
+            privateChat.style.display = 'none'
+        }
+
+        /**make the private room window draggable*/
+        dragElement(privateChat)
+        socket.emit('send-private-chat-message', id, 'example message')
+    }
 }
 
 
