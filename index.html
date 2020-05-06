@@ -38,12 +38,14 @@
 
 
     <div id="createGroupModal" class="drop-shadow">
-        <span>Gruppe erstellen</span>
+        <span style="margin: 18px;position: absolute;font-size: 17pt;">Gruppe erstellen</span>
         <h2 class="close-button" style="margin: 10px;" onclick="closeCreateGroupWindow()">&#10006;</h2>
         <ul id="newGroupChatUserList">
         </ul>
-        <button onclick="abortCreateGroup()">Abbrechen</button>
-        <button onclick="createGroup()">Erstellen</button>
+        <div class="createGroupButtons">
+            <button onclick="abortCreateGroup()">Abbrechen</button>
+            <button onclick="createGroup()">Erstellen</button>
+        </div>
     </div>
 </body>
 </html>

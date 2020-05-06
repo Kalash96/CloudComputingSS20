@@ -76,6 +76,8 @@ html, body {
     border: solid 1px #4d4d4d;
     border-radius: 10px;
     margin-right: 10em;
+    overflow: hidden;
+    resize: both;
 }
 
 .chat-window h2 {
@@ -180,7 +182,8 @@ html, body {
 #newGroupChatUserList {
     list-style-type: none;
     padding: 0;
-    margin: 40px;
+    margin: 30px;
+    margin-top: 100px;
 }
 
 .list-item {
@@ -201,7 +204,8 @@ html, body {
    margin: 0; 
 }
 
-#privatChatDiv {
+
+.chatWindow {
     height: 68%;
     width: 98%;
     background-color: #2b2c35;
@@ -209,7 +213,7 @@ html, body {
     overflow: auto;
 }
 
-#privateInputField {
+.chatWindowInputField {
     width: 95%;
     align-self: center;
     background-color: #616161;
@@ -220,8 +224,19 @@ html, body {
     color: white;
 }
 
-#privateChatForm {
-    position: absolute;
+.chatForm {
     bottom: 0;
     width: 48%;
+    position: absolute;
+}
+
+.createGroupButtons {
+    position: absolute;
+    bottom: 0;
+    margin-bottom: 20px;
+    margin: auto;
+}
+
+.createGroupButtons button {
+    padding: 10px;
 }

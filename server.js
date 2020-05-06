@@ -21,7 +21,6 @@ io.on('connection', socket => {
     })
 
     socket.on('send-private-chat-message', (id, message) => {
-        console.log(id + " " + message)
         io.to(id).emit('private-chat-message', { message: message, name: users[socket.id], senderId: socket.id})
     })
 
@@ -36,11 +35,11 @@ io.on('connection', socket => {
 
     socket.on('join-group', id => {
         socket.join(id);
-        //maybe send a "Joined group message here"
+        //maybe send a static "Joined group message here"
     })
 
     socket.on('send-group-message', (groupId, message) => {
-        io.to(groupId).emit('group-chat-message', {message: message, name: users[socket.id]});
+        socket.broadcast.to(groupId).emit('group-chat-message', {message: message, groupId:groupId, name: users[socket.id]});
     })
 })
 

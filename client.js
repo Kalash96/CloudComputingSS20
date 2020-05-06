@@ -7,6 +7,7 @@ const userList = document.getElementById('userList')
 
 showUsernamePrompt()
 
+
 socket.on('connected', data => {
     refreshUserList(data)
 })
@@ -40,7 +41,7 @@ socket.on('private-chat-message', data => {
     // bei Schließung des fensters wird das fenster mit display: none versteckt
     // falls das fenster schon exisiert wird es nicth neu erstellt sondern mit display: block wieder sichtbar gemacht
     openPrivateChat(data.senderId, data.name)
-    appendMessage(data.name, data.message, document.getElementById(data.senderId.toString() + "-private-chats-areas").childNodes[1])
+    appendMessage(data.name, data.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
 
 
 })
@@ -259,7 +260,7 @@ function refreshUserList(users) {
 function openPrivateChat(id, userName) {
     //TODO
     /**make the window for the private chatroom*/
-    var privateChat = document.getElementById(id.toString() + "-private-chats-areas")
+    var privateChat = document.getElementById(id.toString() + "-chat")
 
     /**when the window was opened, then make the none window to block window */
     if (privateChat) {
@@ -273,12 +274,13 @@ function openPrivateChat(id, userName) {
         const privateChat = document.createElement('div')
         privateChat.classList.add('drop-shadow')
         privateChat.classList.add('chat-window')
-        privateChat.id = id.toString() + "-private-chats-areas"
+        privateChat.id = id.toString() + "-chat"
         document.body.appendChild(privateChat)
 
         /**make the header for the private chatroom window*/
         const privateChatHeader = document.createElement('div')
-        privateChatHeader.id = id.toString() + '-private-chats-areasheader'
+        privateChatHeader.id = id.toString() + '-chat-header'
+        privateChatHeader.style.cursor = 'grab'
 
         /**the name of the private chatroom window should be the name from the user in the list (in the header) */
         const privateChatTitle = document.createElement('h2')
@@ -294,22 +296,20 @@ function openPrivateChat(id, userName) {
 
         /**the message container in the private chat window */
         const privatMessagesContainer = document.createElement('div')
-        privatMessagesContainer.id = "privatChatDiv"
+        privatMessagesContainer.classList.add('chatWindow')
 
         /**the input field with the Buttons in the private chat window */
         const privateSendContainer = document.createElement('form')
-        privateSendContainer.id = 'privateChatForm'
+        privateSendContainer.classList.add('chatForm')
 
         const inputField = document.createElement('input')
         inputField.setAttribute('type', 'text')
         inputField.placeholder = "Nachricht..."
-        inputField.id = "privateInputField"
+        inputField.classList.add('chatWindowInputField')
 
         const privateSendButton = document.createElement('button')
         privateSendButton.innerHTML = "Send"
         privateSendButton.type = "submit"
-
-
 
         privateSendContainer.addEventListener('submit', async e => {
             e.preventDefault();
@@ -322,8 +322,6 @@ function openPrivateChat(id, userName) {
             inputField.value = ''
 
             socket.emit('send-private-chat-message', id, message)
-
-
         })
 
         privateSendContainer.appendChild(inputField)
@@ -356,15 +354,17 @@ function openPrivateChat(id, userName) {
 //make a element with a header movable (e.g. div)
 function dragElement(elmnt) {
     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    if (document.getElementById(elmnt.id + "header")) {
+    let header = document.getElementById(elmnt.id + "-header")
+    if (header) {
         /* if present, the header is where you move the DIV from:*/
-        document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+        header.onmousedown = dragMouseDown;
     } else {
         /* otherwise, move the DIV from anywhere inside the DIV:*/
         elmnt.onmousedown = dragMouseDown;
     }
 
     function dragMouseDown(e) {
+        header.style.cursor = 'grabbing'
         e = e || window.event;
         e.preventDefault();
         // get the mouse cursor position at startup:
@@ -393,6 +393,7 @@ function dragElement(elmnt) {
 
     function closeDragElement() {
         /* stop moving when mouse button is released:*/
+        header.style.cursor = 'grab'
         document.onmouseup = null;
         document.onmousemove = null;
     }
@@ -409,6 +410,9 @@ function showCreateGroupWindow() {
     let userListNodes = userList.childNodes
     for(let i = 0; i < userListNodes.length; i++) {
         let node = userListNodes[i].cloneNode(true)
+        if(node.id == socket.id) {
+            continue;
+        }
         node.onclick = () => {
             if(node.style.backgroundColor != 'green'){
                 node.style.backgroundColor = 'green'
@@ -495,6 +499,11 @@ function openGroupChatWindow(id) {
         chatWindow.classList.add('chat-window')
         document.body.appendChild(chatWindow)
 
+         /**make the header for the group chatroom window*/
+         const groupChatHeader = document.createElement('div')
+         groupChatHeader.id = id.toString() + '-chat-header'
+         groupChatHeader.style.cursor = 'grab'
+
         const title = document.createElement('h2')
         title.innerHTML = groups[id]
 
@@ -506,13 +515,47 @@ function openGroupChatWindow(id) {
             chatWindow.style.display = 'none'
         }
         
-        input = document.createElement('input')
-        input.type = 'text'
-        input.placeholder = 'Nachricht'
 
-        chatWindow.append(title)
-        chatWindow.append(closeButton)
-        chatWindow.append(input)
+        //the message container
+        const messagesContainer = document.createElement('div')
+        messagesContainer.classList.add('chatWindow')
+
+        //the input field with the buttons
+        const inptContainer = document.createElement('form')
+        inptContainer.classList.add('chatForm')
+
+        const inputField = document.createElement('input')
+        inputField.setAttribute('type', 'text')
+        inputField.placeholder = "Nachricht..."
+        inputField.classList.add('chatWindowInputField')
+
+        const sendButton = document.createElement('button')
+        sendButton.innerHTML = "Send"
+        sendButton.type = "submit"
+        
+        inptContainer.addEventListener('submit', async e => {
+            e.preventDefault();
+            const message = inputField.value
+
+            let msg = null
+            if (message.length > 0) {
+                msg = appendMessage('You', message, messagesContainer)
+            }
+            inputField.value = ''
+
+            socket.emit('send-group-message', id, message)
+        })
+
+        inptContainer.appendChild(inputField)
+        inptContainer.appendChild(sendButton)
+
+        
+        /**add the tiltle and the button as h2 to the header of the window*/
+        groupChatHeader.appendChild(title)
+        groupChatHeader.appendChild(closeButton)
+        chatWindow.append(groupChatHeader)
+        chatWindow.append(messagesContainer)
+        chatWindow.append(inptContainer)
 
         dragElement(chatWindow)
     }
@@ -543,5 +586,6 @@ socket.on('new-group', data => {
 })
 
 socket.on('group-chat-message', data => {
-    console.log(data)
+    openGroupChatWindow(data.groupId)
+    appendMessage(data.name, data.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1])
 })
