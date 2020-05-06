@@ -12,7 +12,7 @@ socket.on('connected', data => {
 })
 
 socket.on('chat-message', async data => {
-    let msg = appendMessage(data.name, data.message.message)
+    let msg = appendMessage(data.name, data.message.message, messageContainer)
     let files = []
     for(let url of data.message.fileList){
         await fetch(url.data)
@@ -39,6 +39,10 @@ socket.on('private-chat-message', data => {
     // im chatfenster kann man dann nachrichten senden  -> send-private-chat-message
     // bei Schließung des fensters wird das fenster mit display: none versteckt
     // falls das fenster schon exisiert wird es nicth neu erstellt sondern mit display: block wieder sichtbar gemacht
+    openPrivateChat(data.senderId, data.name)
+    appendMessage(data.name, data.message, document.getElementById(data.senderId.toString() + "-private-chats-areas").childNodes[1])
+
+
 })
 
 socket.on('user-connected', info => {
@@ -61,11 +65,11 @@ messageForm.addEventListener('submit', async e => {
 
     let msg = null
     if(message.length > 0) {
-        msg = appendMessage('You', message)
+        msg = appendMessage('You', message, messageContainer)
     }
     //if only a file is submitted, the message stays empty
     else if(message.length == 0 && fileList.length > 0) {
-        msg = appendMessage('You', '')
+        msg = appendMessage('You', '', messageContainer)
     }
     messageInput.value = ''
 
@@ -212,7 +216,7 @@ function createMessageHeader(username) {
 }
 
 
-function appendMessage(username, text) {
+function appendMessage(username, text, container) {
     let header = createMessageHeader(username)
 
     let message = document.createElement('div')
@@ -224,7 +228,7 @@ function appendMessage(username, text) {
     message.append(header)
     message.append(content)
 
-    messageContainer.append(message)
+    container.append(message)
     return message
 }
 
@@ -274,7 +278,7 @@ function openPrivateChat(id, userName) {
 
         /**make the header for the private chatroom window*/
         const privateChatHeader = document.createElement('div')
-        privateChatHeader.classList.add('private-chats-areasheader')
+        privateChatHeader.id = id.toString() + '-private-chats-areasheader'
 
         /**the name of the private chatroom window should be the name from the user in the list (in the header) */
         const privateChatTitle = document.createElement('h2')
@@ -288,6 +292,43 @@ function openPrivateChat(id, userName) {
         const closeButtonText = document.createTextNode(String.fromCharCode(10006))
         closeButton.appendChild(closeButtonText)
 
+        /**the message container in the private chat window */
+        const privatMessagesContainer = document.createElement('div')
+        privatMessagesContainer.id = "privatChatDiv"
+
+        /**the input field with the Buttons in the private chat window */
+        const privateSendContainer = document.createElement('form')
+        privateSendContainer.id = 'privateChatForm'
+
+        const inputField = document.createElement('input')
+        inputField.setAttribute('type', 'text')
+        inputField.placeholder = "Nachricht..."
+        inputField.id = "privateInputField"
+
+        const privateSendButton = document.createElement('button')
+        privateSendButton.innerHTML = "Send"
+        privateSendButton.type = "submit"
+
+
+
+        privateSendContainer.addEventListener('submit', async e => {
+            e.preventDefault();
+            const message = inputField.value
+
+            let msg = null
+            if (message.length > 0) {
+                msg = appendMessage('You', message, privatMessagesContainer)
+            }
+            inputField.value = ''
+
+            socket.emit('send-private-chat-message', id, message)
+
+
+        })
+
+        privateSendContainer.appendChild(inputField)
+        privateSendContainer.appendChild(privateSendButton)
+
         /**add the tiltle and the button as h2 to the header of the window*/
         privateChatHeader.appendChild(privateChatTitle)
         privateChatHeader.appendChild(closeButton)
@@ -300,9 +341,14 @@ function openPrivateChat(id, userName) {
             privateChat.style.display = 'none'
         }
 
+        /**add the private message container for the private chatroom window*/
+        privateChat.append(privatMessagesContainer)
+
+        privateChat.append(privateSendContainer)
+
         /**make the private room window draggable*/
         dragElement(privateChat)
-        socket.emit('send-private-chat-message', id, 'example message')
+        //socket.emit('send-private-chat-message', id, 'example message')
     }
 }
 

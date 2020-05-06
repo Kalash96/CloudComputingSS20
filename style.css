@@ -200,3 +200,28 @@ html, body {
    font-size: 15pt;
    margin: 0; 
 }
+
+#privatChatDiv {
+    height: 68%;
+    width: 98%;
+    background-color: #2b2c35;
+    margin: auto;
+    overflow: auto;
+}
+
+#privateInputField {
+    width: 95%;
+    align-self: center;
+    background-color: #616161;
+    list-style: none;
+    padding: 7px;
+    border: solid 1px #262629;
+    border-radius: 10px;
+    color: white;
+}
+
+#privateChatForm {
+    position: absolute;
+    bottom: 0;
+    width: 48%;
+}

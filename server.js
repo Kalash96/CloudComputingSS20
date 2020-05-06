@@ -22,7 +22,7 @@ io.on('connection', socket => {
 
     socket.on('send-private-chat-message', (id, message) => {
         console.log(id + " " + message)
-        io.to(id).emit('private-chat-message', {message: message, name: users[socket.id]})
+        io.to(id).emit('private-chat-message', { message: message, name: users[socket.id], senderId: socket.id})
     })
 
     socket.on('create-group', (id, name, users) => {
