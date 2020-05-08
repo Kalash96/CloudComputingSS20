@@ -257,3 +257,24 @@ html, body {
 .createGroupButtons button {
     padding: 10px;
 }
+
+#private-upload-button {
+    width: 45px;
+    height: 20px;
+    background: url(rs/attachment.png) no-repeat;
+    cursor: pointer;
+    position: absolute;
+    border: none;
+    margin-left: 0.5rem;
+}
+
+#private-upload-input {
+    width: 45px;
+    height: 20px;
+    display: none;
+}
+
+#privateFiles {
+    overflow: auto;
+    display: block ruby;
+}

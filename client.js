@@ -34,15 +34,35 @@ socket.on('chat-message', async data => {
     }
 })
 
-socket.on('private-chat-message', data => {
+socket.on('private-chat-message', async data => {
     // TODO opens the chat window and displays the message
     // zeige das chatfenster
     // im chatfenster kann man dann nachrichten senden  -> send-private-chat-message
     // bei Schließung des fensters wird das fenster mit display: none versteckt
     // falls das fenster schon exisiert wird es nicth neu erstellt sondern mit display: block wieder sichtbar gemacht
     openPrivateChat(data.senderId, data.name)
-    appendMessage(data.name, data.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
 
+    let msg = appendMessage(data.name, data.message.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
+    
+    let files = []
+    for (let url of data.message.fileList) {
+        await fetch(url.data)
+            .then(res => res.blob())
+            .then(blob => {
+                let dataType = url.data.substring(5).split(';')[0]
+                const file = new File([blob], url.name, { type: dataType })
+                files.push(file)
+            })
+    }
+    let fileList = getFilesAsHtmlElements(files);
+    if (fileList.length > 0) {
+        msg.append(document.createElement('br'))
+        for (let i = 0; i < fileList.length; i++) {
+            msg.append(fileList[i])
+            msg.append(document.createElement('br'))
+        }
+    }
+    
 
 })
 
@@ -173,9 +193,9 @@ function getFilesAsHtmlElements(files) {
     return fileList;
 }
 
-function getFileName () {
-    let files = document.getElementById('file-upload').files
-    let fileNamesContainer = document.getElementById('files')
+function getFileName (filesInputId, containerId) {
+    let files = document.getElementById(filesInputId).files
+    let fileNamesContainer = document.getElementById(containerId)
     fileNamesContainer.innerHTML = ''
 
     for(let i = 0; i < files.length; i++) {
@@ -252,7 +272,10 @@ function refreshUserList(users) {
         userList.appendChild(listElement)
         
         listElement.ondblclick = () => {
-            openPrivateChat(id, users[id])
+            if (socket.id != id) {
+                openPrivateChat(id, users[id])
+            }
+            
         }
     }
 }
@@ -311,21 +334,59 @@ function openPrivateChat(id, userName) {
         privateSendButton.innerHTML = "Send"
         privateSendButton.type = "submit"
 
+        const privateUploadButton = document.createElement('button')
+        privateUploadButton.id = "private-upload-button"
+        privateUploadButton.onclick = () => {
+            document.getElementById('private-upload-input').click(); return false;
+            }
+        const privateUploadInput = document.createElement('input')
+        privateUploadInput.type = "file"
+        privateUploadInput.multiple = "true"
+        privateUploadInput.id = "private-upload-input"
+        privateUploadInput.onchange = () => {
+            getFileName('private-upload-input', 'privateFiles')
+        }
+
+        const privateFiles = document.createElement('div')
+        privateFiles.id = "privateFiles"
+
         privateSendContainer.addEventListener('submit', async e => {
             e.preventDefault();
             const message = inputField.value
+            let fileList = getFilesAsHtmlElements(privateUploadInput.files)
+            let fileListB64 = await getBase64FilesList()
 
             let msg = null
             if (message.length > 0) {
                 msg = appendMessage('You', message, privatMessagesContainer)
             }
+            else if (message.length == 0 && fileList.length > 0) {
+                msg = appendMessage('You', '', privatMessagesContainer)
+            }
             inputField.value = ''
 
-            socket.emit('send-private-chat-message', id, message)
+            socket.emit('send-private-chat-message', id, { message: message, fileList: fileListB64 })
+
+            if (fileList.length > 0) {
+                inputField.value = ''
+                privateUploadInput.value = ''
+
+                let fileNamesContainer = privateFiles
+                fileNamesContainer.innerHTML = ''
+
+                msg.append(document.createElement('br'))
+                for (let i = 0; i < fileList.length; i++) {
+                    msg.append(fileList[i])
+                    msg.append(document.createElement('br'))
+                }
+            }
         })
 
         privateSendContainer.appendChild(inputField)
         privateSendContainer.appendChild(privateSendButton)
+        privateSendContainer.appendChild(privateUploadButton)
+        privateSendContainer.appendChild(privateUploadInput)
+        privateSendContainer.appendChild(privateFiles)
 
         /**add the tiltle and the button as h2 to the header of the window*/
         privateChatHeader.appendChild(privateChatTitle)
@@ -542,7 +603,7 @@ function openGroupChatWindow(id) {
                 msg = appendMessage('You', message, messagesContainer)
             }
             inputField.value = ''
-
+            
             socket.emit('send-group-message', id, message)
         })
 
