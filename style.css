@@ -278,3 +278,13 @@ html, body {
     overflow: auto;
     display: block ruby;
 }
+
+#group-upload-button {
+    width: 45px;
+    height: 20px;
+    background: url(rs/attachment.png) no-repeat;
+    cursor: pointer;
+    position: absolute;
+    border: none;
+    margin-left: 0.5rem;
+}

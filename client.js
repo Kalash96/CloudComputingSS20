@@ -67,13 +67,13 @@ socket.on('private-chat-message', async data => {
 })
 
 socket.on('user-connected', info => {
-    appendStaticMessage(info.username + ' connected')
+    appendStaticMessage(info.username + ' connected', messageContainer)
     refreshUserList(info.userlist)
 })
 
 socket.on('user-disconnected', user => {
-    if(user.username != null) {
-        appendStaticMessage(user.username + ' disconnected')
+    if (user.username != null) {
+        appendStaticMessage(user.username + ' disconnected', messageContainer)
         refreshUserList(user.userlist)
     }
 })
@@ -82,7 +82,7 @@ messageForm.addEventListener('submit', async e => {
     e.preventDefault();
     const message = messageInput.value
     let fileList = getFilesAsHtmlElements(document.getElementById('file-upload').files)
-    let fileListB64 = await getBase64FilesList()
+    let fileListB64 = await getBase64FilesList('file-upload')
 
     let msg = null
     if(message.length > 0) {
@@ -125,9 +125,9 @@ messageForm.addEventListener('submit', async e => {
 }
 
 //returns a list of all Base64 encoded input files from the file upload
-async function getBase64FilesList() {
+async function getBase64FilesList(elementId) {
     let files = []
-    let fileInput = document.getElementById('file-upload').files
+    let fileInput = document.getElementById(elementId).files
     let promises = []
     for(let file of fileInput) {
         let promise = getBase64(file)
@@ -213,7 +213,7 @@ function showUsernamePrompt() {
         name = prompt('What is your name?')
     }
     console.log(name)
-    appendStaticMessage(name + ', you joined')
+    appendStaticMessage(name + ', you joined', messageContainer)
     socket.emit('new-user', name)
 }
 
@@ -253,13 +253,13 @@ function appendMessage(username, text, container) {
     return message
 }
 
-function appendStaticMessage(message) {
+function appendStaticMessage(message, container) {
     const messageElement = document.createElement('div')
     messageElement.style.backgroundColor = "#353e75"
     messageElement.classList.add('message')
     var time = new Date().toLocaleTimeString();
     messageElement.innerText = time + ": " + message
-    messageContainer.append(messageElement)
+    container.append(messageElement)
 }
 
 function refreshUserList(users) {
@@ -281,7 +281,6 @@ function refreshUserList(users) {
 }
 
 function openPrivateChat(id, userName) {
-    //TODO
     /**make the window for the private chatroom*/
     var privateChat = document.getElementById(id.toString() + "-chat")
 
@@ -337,24 +336,25 @@ function openPrivateChat(id, userName) {
         const privateUploadButton = document.createElement('button')
         privateUploadButton.id = "private-upload-button"
         privateUploadButton.onclick = () => {
-            document.getElementById('private-upload-input').click(); return false;
+            document.getElementById(id.toString() + '-private-upload-input').click(); return false;
             }
         const privateUploadInput = document.createElement('input')
         privateUploadInput.type = "file"
         privateUploadInput.multiple = "true"
-        privateUploadInput.id = "private-upload-input"
+        privateUploadInput.id = id.toString() + "-private-upload-input"
+        privateUploadInput.style.display = "none"
         privateUploadInput.onchange = () => {
-            getFileName('private-upload-input', 'privateFiles')
+            getFileName(id.toString() + '-private-upload-input', id.toString() + '-privateFiles')
         }
 
         const privateFiles = document.createElement('div')
-        privateFiles.id = "privateFiles"
+        privateFiles.id = id.toString() + "-privateFiles"
 
         privateSendContainer.addEventListener('submit', async e => {
             e.preventDefault();
             const message = inputField.value
             let fileList = getFilesAsHtmlElements(privateUploadInput.files)
-            let fileListB64 = await getBase64FilesList()
+            let fileListB64 = await getBase64FilesList(id.toString() + '-private-upload-input')
 
             let msg = null
             if (message.length > 0) {
@@ -512,6 +512,9 @@ function createGroup() {
 
         socket.emit('create-group', id, groups[id], groupParticipants)
         openGroupChatWindow(id)
+
+        appendStaticMessage('Willcome to the group', document.getElementById(id.toString() + '-chat').childNodes[1])
+
         //reset
         groupParticipants = {}
     }
@@ -593,22 +596,62 @@ function openGroupChatWindow(id) {
         const sendButton = document.createElement('button')
         sendButton.innerHTML = "Send"
         sendButton.type = "submit"
+
+        const groupUploadButton = document.createElement('button')
+        groupUploadButton.id = "group-upload-button"
+        groupUploadButton.onclick = () => {
+            document.getElementById(id.toString() + '-group-upload-input').click(); return false;
+        }
+        const groupUploadInput = document.createElement('input')
+        groupUploadInput.type = "file"
+        groupUploadInput.multiple = "true"
+        groupUploadInput.id = id.toString() + "-group-upload-input"
+        groupUploadInput.style.display = "none"
+        groupUploadInput.onchange = () => {
+            getFileName(id.toString() + '-group-upload-input', id.toString() + '-groupFiles')
+        }
+
+        const groupFiles = document.createElement('div')
+        groupFiles.id = id.toString() + "-groupFiles"
         
         inptContainer.addEventListener('submit', async e => {
             e.preventDefault();
             const message = inputField.value
+            let fileList = getFilesAsHtmlElements(groupUploadInput.files)
+            let fileListB64 = await getBase64FilesList(id.toString() + '-group-upload-input')
 
             let msg = null
             if (message.length > 0) {
                 msg = appendMessage('You', message, messagesContainer)
             }
+            else if (message.length == 0 && fileList.length > 0) {
+                msg = appendMessage('You', '', messagesContainer)
+            }
+
             inputField.value = ''
-            
-            socket.emit('send-group-message', id, message)
+
+            socket.emit('send-group-message', id, { message: message, fileList: fileListB64 })
+
+            if (fileList.length > 0) {
+                inputField.value = ''
+                groupUploadInput.value = ''
+
+                let fileNamesContainer = groupFiles
+                fileNamesContainer.innerHTML = ''
+
+                msg.append(document.createElement('br'))
+                for (let i = 0; i < fileList.length; i++) {
+                    msg.append(fileList[i])
+                    msg.append(document.createElement('br'))
+                }
+            }
         })
 
         inptContainer.appendChild(inputField)
         inptContainer.appendChild(sendButton)
+        inptContainer.appendChild(groupUploadButton)
+        inptContainer.appendChild(groupUploadInput)
+        inptContainer.appendChild(groupFiles)
 
         
         /**add the tiltle and the button as h2 to the header of the window*/
@@ -643,10 +686,34 @@ socket.on('new-group', data => {
     listItem.ondblclick = () => openGroupChatWindow(data.id)
     groupList.append(listItem)
 
+    appendStaticMessage('Willcome to the group,', document.getElementById(data.id.toString() + '-chat').childNodes[1])
+
     socket.emit('join-group', data.id)
 })
 
-socket.on('group-chat-message', data => {
+socket.on('group-chat-message', async data => {
     openGroupChatWindow(data.groupId)
-    appendMessage(data.name, data.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1])
+    //appendMessage(data.name, data.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1])
+
+    let msg = appendMessage(data.name, data.message.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1])
+
+    let files = []
+    for (let url of data.message.fileList) {
+        await fetch(url.data)
+            .then(res => res.blob())
+            .then(blob => {
+                let dataType = url.data.substring(5).split(';')[0]
+                const file = new File([blob], url.name, { type: dataType })
+                files.push(file)
+            })
+    }
+    let fileList = getFilesAsHtmlElements(files);
+    if (fileList.length > 0) {
+        msg.append(document.createElement('br'))
+        for (let i = 0; i < fileList.length; i++) {
+            msg.append(fileList[i])
+            msg.append(document.createElement('br'))
+        }
+    }
+
 })
