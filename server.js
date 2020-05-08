@@ -27,8 +27,8 @@ io.on('connection', socket => {
     socket.on('create-group', (id, name, users) => {
         socket.join(id);
         for(let userId in users) {
-            if(userId != socket.id){
-                io.to(userId).emit('new-group', {id: id, name: name})
+            if (userId != socket.id) {
+                io.to(userId).emit('new-group', { id: id, name: name, users: users })
             }
         }
     })

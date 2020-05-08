@@ -513,7 +513,7 @@ function createGroup() {
         socket.emit('create-group', id, groups[id], groupParticipants)
         openGroupChatWindow(id)
 
-        appendStaticMessage('Willcome to the group', document.getElementById(id.toString() + '-chat').childNodes[1])
+        appendStaticMessage('You created the group', document.getElementById(id.toString() + '-chat').childNodes[1])
 
         //reset
         groupParticipants = {}
@@ -686,7 +686,7 @@ socket.on('new-group', data => {
     listItem.ondblclick = () => openGroupChatWindow(data.id)
     groupList.append(listItem)
 
-    appendStaticMessage('Willcome to the group,', document.getElementById(data.id.toString() + '-chat').childNodes[1])
+    appendStaticMessage('Welcome to the group, ' + data.users[socket.id], document.getElementById(data.id.toString() + '-chat').childNodes[1])
 
     socket.emit('join-group', data.id)
 })
