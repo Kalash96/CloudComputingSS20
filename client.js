@@ -505,12 +505,17 @@ groups = {}
 function createGroup() {
     if (Object.keys(groupParticipants).length <= 0) {
         alert("Du musst zuerst Teilnehmer auswählen")
-    } else {
+        
+    }else if
+        (document.getElementById('groupName').value == '' ){
+        alert("Du musst einene Gruppennamen angeben")
+    }else {
+        var groupname =  document.getElementById('groupName').value
         closeCreateGroupWindow()
         let id  = 'id' + (new Date()).getTime(); //todo check if not used already
-        addGroupToList(id)
+        addGroupToList(id,groupname)
 
-        socket.emit('create-group', id, groups[id], groupParticipants)
+        socket.emit('create-group', id, groupname, groupParticipants)
         openGroupChatWindow(id)
 
         appendStaticMessage('You created the group', document.getElementById(id.toString() + '-chat').childNodes[1])
@@ -520,9 +525,9 @@ function createGroup() {
     }
 }
 
-function addGroupToList(id) {
+function addGroupToList(id,groupname) {
     let groupList = document.getElementById('groupList')
-    let name = ''
+    let name = groupname
 
     //get all ids
     let participants = Object.keys(groupParticipants)
@@ -530,19 +535,19 @@ function addGroupToList(id) {
     //get the names of the id and add them to the name
     // TODO IN THE MODAL TO CREATE GROUP THE NAME SHOULD BE ENTERED 
     // AND MEMBERS SHOULD BE IN AN EXTRA LIST 
-    for(let i = 0; i < participants.length;i++) {
+    /**for(let i = 0; i < participants.length;i++) {
         if(i < participants.length-1) {
             name += groupParticipants[participants[i]] + ", "
         }else {
             name += groupParticipants[participants[i]]
         }
     }
-
+*/
     let listItem = document.createElement('li')
     listItem.id = id
     listItem.classList.add('list-item')
     listItem.innerHTML = name
-
+    console.log(groupName)
     //store the id and name for later reference
     groups[id] = name
     listItem.ondblclick = () => openGroupChatWindow(id)
