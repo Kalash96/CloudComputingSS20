@@ -494,7 +494,7 @@ function closeCreateGroupWindow() {
     document.getElementById('createGroupModal').style.display = 'none'
 }
 
-function abortCreateGroup () {
+function abortCreateGroup() {
     closeCreateGroupWindow()
     //clear the array
     groupParticipants = {}
@@ -503,9 +503,9 @@ function abortCreateGroup () {
 //stores all the current groups of the user (id/name)
 groups = {}
 function createGroup() {
-    if(Object.keys(groupParticipants).length <= 0) {
+    if (Object.keys(groupParticipants).length <= 0) {
         alert("Du musst zuerst Teilnehmer auswählen")
-    }else {
+    } else {
         closeCreateGroupWindow()
         let id  = 'id' + (new Date()).getTime(); //todo check if not used already
         addGroupToList(id)

@@ -252,10 +252,13 @@ html, body {
     bottom: 0;
     margin-bottom: 20px;
     margin: auto;
+    width: 100%;
 }
 
 .createGroupButtons button {
     padding: 10px;
+    float: right;
+    margin-right: 0.5em;
 }
 
 #private-upload-button {
@@ -287,4 +290,15 @@ html, body {
     position: absolute;
     border: none;
     margin-left: 0.5rem;
+}
+
+.groupNameInput {
+    float: left;
+    width: 50%;
+    background-color: #616161;
+    padding: 9px;
+    border: solid 1px #262629;
+    border-radius: 10px;
+    color: white;
+}
 }
