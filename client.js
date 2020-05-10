@@ -196,14 +196,27 @@ function getFileName (filesInputId, containerId) {
     let files = document.getElementById(filesInputId).files
     let fileNamesContainer = document.getElementById(containerId)
     fileNamesContainer.innerHTML = ''
+  
 
     for(let i = 0; i < files.length; i++) {
         let fileName = document.createElement('p')
+        let bt = document.createElement('button')
+        bt.classList.add('delete_bt')
+
         fileName.classList.add('attachment')
         fileName.innerHTML = files[i].name
+
         fileNamesContainer.append(fileName)
+        fileNamesContainer.append(bt)
+        bt.onclick = (event) => {
+            event.preventDefault()
+            fileName.remove()
+            bt.remove()
+            document.getElementById(filesInputId).value = ''          
+        }
     }
 };
+
 
 /**the prompt window from the browser to log in the chat with the user name */
 function showUsernamePrompt() {
