@@ -35,11 +35,6 @@ socket.on('chat-message', async data => {
 })
 
 socket.on('private-chat-message', async data => {
-    // TODO opens the chat window and displays the message
-    // zeige das chatfenster
-    // im chatfenster kann man dann nachrichten senden  -> send-private-chat-message
-    // bei Schließung des fensters wird das fenster mit display: none versteckt
-    // falls das fenster schon exisiert wird es nicth neu erstellt sondern mit display: block wieder sichtbar gemacht
     openPrivateChat(data.senderId, data.name)
 
     let msg = appendMessage(data.name, data.message.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
@@ -192,7 +187,11 @@ function getFilesAsHtmlElements(files) {
     }
     return fileList;
 }
-
+/**
+ * add the file names from the files input field to the file names container under the buttons 
+ * @param {any} filesInputId
+ * @param {any} containerId
+ */
 function getFileName (filesInputId, containerId) {
     let files = document.getElementById(filesInputId).files
     let fileNamesContainer = document.getElementById(containerId)
@@ -206,6 +205,7 @@ function getFileName (filesInputId, containerId) {
     }
 };
 
+/**the prompt window from the browser to log in the chat with the user name */
 function showUsernamePrompt() {
     let name = prompt('What is your name?')
     while(!name) {
@@ -217,6 +217,10 @@ function showUsernamePrompt() {
     socket.emit('new-user', name)
 }
 
+/**
+ * create the header for the messages in the message containers with the name of the sender and the timestamp 
+ * @param {any} username
+ */
 function createMessageHeader(username) {
     let header = document.createElement('h2')
 
@@ -236,7 +240,12 @@ function createMessageHeader(username) {
     return header
 }
 
-
+/**
+ * add the text with the user name in the container
+ * @param {String} username
+ * @param {String} text
+ * @param {any} container
+ */
 function appendMessage(username, text, container) {
     let header = createMessageHeader(username)
 
@@ -253,6 +262,11 @@ function appendMessage(username, text, container) {
     return message
 }
 
+/**
+ * add and highlight the message in the container
+ * @param {String} message
+ * @param {any} container
+ */
 function appendStaticMessage(message, container) {
     const messageElement = document.createElement('div')
     messageElement.style.backgroundColor = "#353e75"
@@ -262,6 +276,10 @@ function appendStaticMessage(message, container) {
     container.append(messageElement)
 }
 
+/**
+ * clear the list and assign the names of all users in the chat room to the user list again to be up to date
+ * @param {any} users
+ */
 function refreshUserList(users) {
     userList.innerHTML = ''; //clear the list
     for(let id in users) {
@@ -320,24 +338,31 @@ function openPrivateChat(id, userName) {
         const privatMessagesContainer = document.createElement('div')
         privatMessagesContainer.classList.add('chatWindow')
 
-        /**the input field with the Buttons in the private chat window */
+        /**the send container with the Buttons in the private chat window */
         const privateSendContainer = document.createElement('form')
         privateSendContainer.classList.add('chatForm')
 
+        /**the input fielt for entering a text */
         const inputField = document.createElement('input')
         inputField.setAttribute('type', 'text')
         inputField.placeholder = "Nachricht..."
         inputField.classList.add('chatWindowInputField')
 
+        /**the bitton for sending files and text */
         const privateSendButton = document.createElement('button')
         privateSendButton.innerHTML = "Send"
         privateSendButton.type = "submit"
 
+        /**the button for calling the file input to be able to upload files */
         const privateUploadButton = document.createElement('button')
         privateUploadButton.id = "private-upload-button"
         privateUploadButton.onclick = () => {
             document.getElementById(id.toString() + '-private-upload-input').click(); return false;
-            }
+        }
+
+        /**the file input
+         * this is only clicked on the button, so it is invisible
+         * the id is created using the user id because this schould be unique */
         const privateUploadInput = document.createElement('input')
         privateUploadInput.type = "file"
         privateUploadInput.multiple = "true"
@@ -347,9 +372,12 @@ function openPrivateChat(id, userName) {
             getFileName(id.toString() + '-private-upload-input', id.toString() + '-privateFiles')
         }
 
+        /**the div for the files before sending that are still to be uploaded */
         const privateFiles = document.createElement('div')
         privateFiles.id = id.toString() + "-privateFiles"
 
+        /**send the text and the files in the send container to the message
+         * send the files or text using the server to the partner in the chat*/
         privateSendContainer.addEventListener('submit', async e => {
             e.preventDefault();
             const message = inputField.value
@@ -382,6 +410,7 @@ function openPrivateChat(id, userName) {
             }
         })
 
+        /**assign the buttons and input fields to the send container */
         privateSendContainer.appendChild(inputField)
         privateSendContainer.appendChild(privateSendButton)
         privateSendContainer.appendChild(privateUploadButton)
