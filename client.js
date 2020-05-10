@@ -513,7 +513,9 @@ function createGroup() {
         var groupname =  document.getElementById('groupName').value
         closeCreateGroupWindow()
         let id  = 'id' + (new Date()).getTime(); //todo check if not used already
-        addGroupToList(id,groupname)
+        addGroupToList(id, groupname)
+
+        document.getElementById('groupName').value = ''
 
         socket.emit('create-group', id, groupname, groupParticipants)
         openGroupChatWindow(id)
@@ -583,7 +585,19 @@ function openGroupChatWindow(id) {
         closeButton.onclick = () => {
             chatWindow.style.display = 'none'
         }
-        
+
+        /**the button to leave the group chat 
+         * delete user from the group
+         * delete the groupList element after leaving
+         */
+        const leavebutton = document.createElement('button')
+        leavebutton.classList.add('leave-button')
+        leavebutton.title = "Leave the group"
+        leavebutton.onclick = () => {
+            chatWindow.style.display = 'none'
+            socket.emit('leave-group', id)
+            document.getElementById('groupList').removeChild(document.getElementById('groupList').children[id])
+        }
 
         //the message container
         const messagesContainer = document.createElement('div')
@@ -662,6 +676,7 @@ function openGroupChatWindow(id) {
         /**add the tiltle and the button as h2 to the header of the window*/
         groupChatHeader.appendChild(title)
         groupChatHeader.appendChild(closeButton)
+        groupChatHeader.appendChild(leavebutton)
         chatWindow.append(groupChatHeader)
         chatWindow.append(messagesContainer)
         chatWindow.append(inptContainer)
@@ -721,4 +736,8 @@ socket.on('group-chat-message', async data => {
         }
     }
 
+})
+
+socket.on('user-left-group', data => {
+    appendStaticMessage(data.name + ' has left the group', document.getElementById(data.groupId.toString() + '-chat').childNodes[1])
 })

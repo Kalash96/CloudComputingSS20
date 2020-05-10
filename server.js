@@ -41,5 +41,10 @@ io.on('connection', socket => {
     socket.on('send-group-message', (groupId, message) => {
         socket.broadcast.to(groupId).emit('group-chat-message', {message: message, groupId:groupId, name: users[socket.id]});
     })
+
+    socket.on('leave-group', id => {
+        socket.leave(id);
+        socket.broadcast.to(id).emit('user-left-group', { groupId: id, name: users[socket.id] });
+    })
 })
 

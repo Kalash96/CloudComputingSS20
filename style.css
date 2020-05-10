@@ -196,6 +196,20 @@ html, body {
     background-color: red;
 }
 
+.leave-button {
+    float: right;
+    width: 29px;
+    height: 29px;
+    background: url(rs/leave_group.png) no-repeat;
+    margin-top: 15px;
+    border-radius: 6px;
+    border-color: transparent;
+}
+
+.leave-button:hover{
+    background-color: red;
+}
+
 #newGroupChatUserList {
     list-style-type: none;
     padding: 0;
