@@ -431,6 +431,7 @@ function openPrivateChat(id, userName) {
         const privateFiles = document.createElement('div')
         privateFiles.id = id.toString() + "-privateFiles"
         privateFiles.style.marginTop = '9px'
+        privateFiles.style.display = "block ruby"
 
         /**send the text and the files in the send container to the message
          * send the files or text using the server to the partner in the chat*/
@@ -713,6 +714,8 @@ function openGroupChatWindow(id) {
         }
 
         const groupFiles = document.createElement('div')
+        groupFiles.style.marginTop = '9px'
+        groupFiles.style.display = "block ruby"
         groupFiles.id = id.toString() + "-groupFiles"
 
         inptContainer.addEventListener('submit', async e => {
