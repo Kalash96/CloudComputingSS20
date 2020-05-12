@@ -319,4 +319,9 @@ html, body {
     width: 20px;
     height: 20px;
     display: block;
+    text-align: justify;
+    cursor: pointer;
+    background-color: red;
+    border: none;
+    color: white
 }

@@ -5,8 +5,9 @@ const messageForm = document.getElementById('send-container')
 const messageInput = document.getElementById('message-input')
 const userList = document.getElementById('userList')
 
-showUsernamePrompt()
+let filesList = [];
 
+showUsernamePrompt()
 
 socket.on('connected', data => {
     refreshUserList(data)
@@ -14,31 +15,6 @@ socket.on('connected', data => {
 
 socket.on('chat-message', async data => {
     let msg = appendMessage(data.name, data.message.message, messageContainer)
-    let files = []
-    for(let url of data.message.fileList){
-        await fetch(url.data)
-        .then(res => res.blob())
-        .then(blob => {
-            let dataType = url.data.substring(5).split(';')[0]
-            const file = new File([blob], url.name, { type: dataType})
-            files.push(file)
-        })
-    }
-    let fileList = getFilesAsHtmlElements(files);
-    if(fileList.length > 0) {
-        msg.append(document.createElement('br'))
-        for(let i = 0; i < fileList.length; i++) {
-            msg.append(fileList[i])
-            msg.append(document.createElement('br'))
-        }
-    }
-})
-
-socket.on('private-chat-message', async data => {
-    openPrivateChat(data.senderId, data.name)
-
-    let msg = appendMessage(data.name, data.message.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
-    
     let files = []
     for (let url of data.message.fileList) {
         await fetch(url.data)
@@ -57,8 +33,31 @@ socket.on('private-chat-message', async data => {
             msg.append(document.createElement('br'))
         }
     }
-    
+})
 
+socket.on('private-chat-message', async data => {
+    openPrivateChat(data.senderId, data.name)
+
+    let msg = appendMessage(data.name, data.message.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
+
+    let files = []
+    for (let url of data.message.fileList) {
+        await fetch(url.data)
+            .then(res => res.blob())
+            .then(blob => {
+                let dataType = url.data.substring(5).split(';')[0]
+                const file = new File([blob], url.name, { type: dataType })
+                files.push(file)
+            })
+    }
+    let fileList = getFilesAsHtmlElements(files);
+    if (fileList.length > 0) {
+        msg.append(document.createElement('br'))
+        for (let i = 0; i < fileList.length; i++) {
+            msg.append(fileList[i])
+            msg.append(document.createElement('br'))
+        }
+    }
 })
 
 socket.on('user-connected', info => {
@@ -75,111 +74,113 @@ socket.on('user-disconnected', user => {
 
 messageForm.addEventListener('submit', async e => {
     e.preventDefault();
+    let filesList2 = filesList
     const message = messageInput.value
-    let fileList = getFilesAsHtmlElements(document.getElementById('file-upload').files)
-    let fileListB64 = await getBase64FilesList('file-upload')
+    let fileListElements = getFilesAsHtmlElements(filesList2)
+    let fileListB64 = await getBase64FilesList(filesList2)
 
     let msg = null
-    if(message.length > 0) {
+    if (message.length > 0) {
         msg = appendMessage('You', message, messageContainer)
     }
     //if only a file is submitted, the message stays empty
-    else if(message.length == 0 && fileList.length > 0) {
+    else if (message.length == 0 && filesList2.length > 0) {
         msg = appendMessage('You', '', messageContainer)
     }
     messageInput.value = ''
 
     //send the message to server with the files as an B64 encoded list
-    socket.emit('send-chat-message', {message: message, fileList: fileListB64})
+    socket.emit('send-chat-message', { message: message, fileList: fileListB64 })
 
-    if(fileList.length > 0) {
+    if (filesList2.length > 0) {
         //reset the input fields
         messageInput.value = ''
+        filesList = []
         document.getElementById('file-upload').value = ''
         //reset attachment list
         let fileNamesContainer = document.getElementById('files')
         fileNamesContainer.innerHTML = ''
-        
+
         //display the files in the chat
         msg.append(document.createElement('br'))
-        for(let i = 0; i < fileList.length; i++) {
-            msg.append(fileList[i])
+        for (let i = 0; i < fileListElements.length; i++) {
+            msg.append(fileListElements[i])
             msg.append(document.createElement('br'))
         }
     }
 })
 
 //returns a promise of a file that is converted into Base64 encoding
- function getBase64(file, onLoadCallback) {
-    return new Promise(function(resolve, reject) {
+function getBase64(file, onLoadCallback) {
+    return new Promise(function (resolve, reject) {
         var reader = new FileReader();
-        reader.onload = function() { resolve(reader.result); };
+        reader.onload = function () { resolve(reader.result); };
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
 }
 
 //returns a list of all Base64 encoded input files from the file upload
-async function getBase64FilesList(elementId) {
+async function getBase64FilesList(fileInput) {
     let files = []
-    let fileInput = document.getElementById(elementId).files
+    // let fileInput = document.getElementById(elementId).files
     let promises = []
-    for(let file of fileInput) {
+    for (let file of fileInput) {
         let promise = getBase64(file)
-        promise.then(function(result) {
-            files.push({name: file.name, data: result})
+        promise.then(function (result) {
+            files.push({ name: file.name, data: result })
         });
         promises.push(promise)
     }
     await Promise.all(promises)
     return files;
- }
+}
 
 //returns a list of the submited files in suited html formatted containers for
 //image, video, audio and files
 function getFilesAsHtmlElements(files) {
     let fileList = []
     let fileInput = files
-    for(let file of fileInput) {
-        if (file.type.startsWith('image/')){ 
+    for (let file of fileInput) {
+        if (file.type.startsWith('image/')) {
             const img = document.createElement("img")
             img.style.maxHeight = '500px'
             img.style.maxWidth = '500px'
             img.classList.add('obj')
             img.file = file
             fileList.push(img)
-    
+
             const reader = new FileReader();
-            reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result; }; })(img);
+            reader.onload = (function (aImg) { return function (e) { aImg.src = e.target.result; }; })(img);
             reader.readAsDataURL(file);
-        }else if(file.type.startsWith('video/')) {
+        } else if (file.type.startsWith('video/')) {
             const vid = document.createElement('video')
             vid.style.maxHeight = '500px'
             vid.style.maxWidth = '500px'
             vid.controls = true
-            
+
             let promise = getBase64(file)
-            promise.then(function(result) {
+            promise.then(function (result) {
                 vid.src = result;
             });
             fileList.push(vid)
-        }else if(file.type.startsWith('audio/')) {
+        } else if (file.type.startsWith('audio/')) {
             const audio = document.createElement('audio')
             audio.controls = true
             let promise = getBase64(file)
-            promise.then(function(result) {
+            promise.then(function (result) {
                 audio.src = result;
             });
             fileList.push(audio)
-        }else {
+        } else {
             const fileContainer = document.createElement('div')
             const link = document.createElement('a')
             link.download = file.name
             let promise = getBase64(file)
-            promise.then(function(result) {
+            promise.then(function (result) {
                 link.href = result;
             });
-           
+
             link.text = file.name
             fileContainer.append(link)
             fileList.push(fileContainer)
@@ -187,21 +188,24 @@ function getFilesAsHtmlElements(files) {
     }
     return fileList;
 }
+
 /**
  * add the file names from the files input field to the file names container under the buttons 
  * @param {any} filesInputId
  * @param {any} containerId
  */
-function getFileName (filesInputId, containerId) {
+function getFileName(filesInputId, containerId) {
     let files = document.getElementById(filesInputId).files
     let fileNamesContainer = document.getElementById(containerId)
     fileNamesContainer.innerHTML = ''
-  
 
-    for(let i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
+        filesList.push(files[i])
         let fileName = document.createElement('p')
         let bt = document.createElement('button')
         bt.classList.add('delete_bt')
+        bt.innerText = String.fromCharCode(10006)
+        bt.innerText.ali
 
         fileName.classList.add('attachment')
         fileName.innerHTML = files[i].name
@@ -212,20 +216,17 @@ function getFileName (filesInputId, containerId) {
             event.preventDefault()
             fileName.remove()
             bt.remove()
-            document.getElementById(filesInputId).value = ''          
+            filesList.splice(filesList[i], 1)
         }
     }
 };
 
-
 /**the prompt window from the browser to log in the chat with the user name */
 function showUsernamePrompt() {
     let name = prompt('What is your name?')
-    while(!name) {
-        console.log("inv")
+    while (!name) {
         name = prompt('What is your name?')
     }
-    console.log(name)
     appendStaticMessage(name + ', you joined', messageContainer)
     socket.emit('new-user', name)
 }
@@ -243,7 +244,7 @@ function createMessageHeader(username) {
     name.innerHTML = username
     header.append(name)
 
-    var time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     let timestamp = document.createElement('span')
     timestamp.style.fontSize = '9pt'
     timestamp.classList.add('lightgrey')
@@ -267,7 +268,7 @@ function appendMessage(username, text, container) {
 
     let content = document.createElement('span')
     content.innerHTML = text
-    
+
     message.append(header)
     message.append(content)
 
@@ -295,18 +296,18 @@ function appendStaticMessage(message, container) {
  */
 function refreshUserList(users) {
     userList.innerHTML = ''; //clear the list
-    for(let id in users) {
-        let listElement = document.createElement('li')    
+    for (let id in users) {
+        let listElement = document.createElement('li')
         listElement.innerText = users[id]
         listElement.id = id
         listElement.classList.add('list-item')
         userList.appendChild(listElement)
-        
+
         listElement.ondblclick = () => {
             if (socket.id != id) {
                 openPrivateChat(id, users[id])
             }
-            
+
         }
     }
 }
@@ -453,7 +454,6 @@ function openPrivateChat(id, userName) {
     }
 }
 
-
 //make a element with a header movable (e.g. div)
 function dragElement(elmnt) {
     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -490,8 +490,8 @@ function dragElement(elmnt) {
         elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
         elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
 
-        if(elmnt.style.top.startsWith('-')) elmnt.style.top = "0px"
-        if(elmnt.style.left.startsWith('-')) elmnt.style.left = "0px"
+        if (elmnt.style.top.startsWith('-')) elmnt.style.top = "0px"
+        if (elmnt.style.left.startsWith('-')) elmnt.style.left = "0px"
     }
 
     function closeDragElement() {
@@ -509,27 +509,24 @@ function showCreateGroupWindow() {
     modal.style.display = 'block'
     let groupUserList = document.getElementById('newGroupChatUserList')
     groupUserList.innerHTML = ''
-    
+
     let userListNodes = userList.childNodes
-    for(let i = 0; i < userListNodes.length; i++) {
+    for (let i = 0; i < userListNodes.length; i++) {
         let node = userListNodes[i].cloneNode(true)
-        if(node.id == socket.id) {
+        if (node.id == socket.id) {
             continue;
         }
         node.onclick = () => {
-            if(node.style.backgroundColor != 'green'){
+            if (node.style.backgroundColor != 'green') {
                 node.style.backgroundColor = 'green'
                 groupParticipants[node.id] = node.innerHTML
-            }else {
+            } else {
                 node.style.backgroundColor = ''
                 delete groupParticipants[node.id]
             }
-            console.log(groupParticipants)
         }
         groupUserList.append(node)
-
     }
-
 }
 
 function closeCreateGroupWindow() {
@@ -547,14 +544,14 @@ groups = {}
 function createGroup() {
     if (Object.keys(groupParticipants).length <= 0) {
         alert("Du musst zuerst Teilnehmer auswählen")
-        
-    }else if
-        (document.getElementById('groupName').value == '' ){
+
+    } else if
+        (document.getElementById('groupName').value == '') {
         alert("Du musst einene Gruppennamen angeben")
-    }else {
-        var groupname =  document.getElementById('groupName').value
+    } else {
+        var groupname = document.getElementById('groupName').value
         closeCreateGroupWindow()
-        let id  = 'id' + (new Date()).getTime(); //todo check if not used already
+        let id = 'id' + (new Date()).getTime(); //todo check if not used already
         addGroupToList(id, groupname)
 
         document.getElementById('groupName').value = ''
@@ -569,7 +566,7 @@ function createGroup() {
     }
 }
 
-function addGroupToList(id,groupname) {
+function addGroupToList(id, groupname) {
     let groupList = document.getElementById('groupList')
     let name = groupname
 
@@ -591,7 +588,6 @@ function addGroupToList(id,groupname) {
     listItem.id = id
     listItem.classList.add('list-item')
     listItem.innerHTML = name
-    console.log(groupName)
     //store the id and name for later reference
     groups[id] = name
     listItem.ondblclick = () => openGroupChatWindow(id)
@@ -600,9 +596,9 @@ function addGroupToList(id,groupname) {
 
 
 function openGroupChatWindow(id) {
-    windowId = id+'-chat'
+    windowId = id + '-chat'
     let chat = document.getElementById(windowId)
-    if(chat) {
+    if (chat) {
         //showing
         chat.style.display = 'block'
     } else {
@@ -612,10 +608,10 @@ function openGroupChatWindow(id) {
         chatWindow.classList.add('chat-window')
         document.body.appendChild(chatWindow)
 
-         /**make the header for the group chatroom window*/
-         const groupChatHeader = document.createElement('div')
-         groupChatHeader.id = id.toString() + '-chat-header'
-         groupChatHeader.style.cursor = 'grab'
+        /**make the header for the group chatroom window*/
+        const groupChatHeader = document.createElement('div')
+        groupChatHeader.id = id.toString() + '-chat-header'
+        groupChatHeader.style.cursor = 'grab'
 
         const title = document.createElement('h2')
         title.innerHTML = groups[id]
@@ -674,7 +670,7 @@ function openGroupChatWindow(id) {
 
         const groupFiles = document.createElement('div')
         groupFiles.id = id.toString() + "-groupFiles"
-        
+
         inptContainer.addEventListener('submit', async e => {
             e.preventDefault();
             const message = inputField.value
@@ -714,7 +710,7 @@ function openGroupChatWindow(id) {
         inptContainer.appendChild(groupUploadInput)
         inptContainer.appendChild(groupFiles)
 
-        
+
         /**add the tiltle and the button as h2 to the header of the window*/
         groupChatHeader.appendChild(title)
         groupChatHeader.appendChild(closeButton)
@@ -730,7 +726,7 @@ function openGroupChatWindow(id) {
 function deleteGroupChat(id) {
     delete groups[id]
     document.getElementById(id).remove()
-    document.getElementById(id+'-chat').remove()
+    document.getElementById(id + '-chat').remove()
 }
 
 //group id and name
@@ -777,7 +773,6 @@ socket.on('group-chat-message', async data => {
             msg.append(document.createElement('br'))
         }
     }
-
 })
 
 socket.on('user-left-group', data => {
