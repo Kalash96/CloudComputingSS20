@@ -111,7 +111,7 @@ html, body {
     margin-left:auto;
 }
 
-#file-upload {
+#global-chat-file-upload {
     width: 49px;
     height: 20px; 
     display: none;
@@ -257,7 +257,7 @@ html, body {
 
 .chatForm {
     bottom: 0;
-    width: 48%;
+    width: 100%;
     position: absolute;
 }
 
@@ -316,12 +316,12 @@ html, body {
     color: white;
 }
 .delete_bt {
-    width: 20px;
-    height: 20px;
-    display: block;
+    display: inline;
     text-align: justify;
     cursor: pointer;
     background-color: red;
     border: none;
-    color: white
+    color: white;
+    padding: 1px 6px;
+    margin-left: 5px;
 }

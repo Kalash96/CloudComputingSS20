@@ -5,7 +5,10 @@ const messageForm = document.getElementById('send-container')
 const messageInput = document.getElementById('message-input')
 const userList = document.getElementById('userList')
 
-let filesList = [];
+//object that stores all the lists of the open files in the chats
+//globalFiles[id] to get the list where the id is the id of the chat/group
+//globalFiles['global-chat-file-upload'] to get the global chat files list
+let globalFiles = {}
 
 showUsernamePrompt()
 
@@ -36,9 +39,15 @@ socket.on('chat-message', async data => {
 })
 
 socket.on('private-chat-message', async data => {
-    openPrivateChat(data.senderId, data.name)
-
-    let msg = appendMessage(data.name, data.message.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
+    let msg;
+    
+    if(!data.message.message && data.message.fileList.length <= 0) {
+        //if msg is empty with no files do nothing
+        return;
+    }else {
+        openPrivateChat(data.senderId, data.name)
+        msg = appendMessage(data.name, data.message.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
+    }
 
     let files = []
     for (let url of data.message.fileList) {
@@ -74,7 +83,7 @@ socket.on('user-disconnected', user => {
 
 messageForm.addEventListener('submit', async e => {
     e.preventDefault();
-    let filesList2 = filesList
+    let filesList2 = globalFiles['global-chat-file-upload']
     const message = messageInput.value
     let fileListElements = getFilesAsHtmlElements(filesList2)
     let fileListB64 = await getBase64FilesList(filesList2)
@@ -95,8 +104,8 @@ messageForm.addEventListener('submit', async e => {
     if (filesList2.length > 0) {
         //reset the input fields
         messageInput.value = ''
-        filesList = []
-        document.getElementById('file-upload').value = ''
+        globalFiles['global-chat-file-upload'] = []
+        document.getElementById('global-chat-file-upload').value = ''
         //reset attachment list
         let fileNamesContainer = document.getElementById('files')
         fileNamesContainer.innerHTML = ''
@@ -196,30 +205,62 @@ function getFilesAsHtmlElements(files) {
  */
 function getFileName(filesInputId, containerId) {
     let files = document.getElementById(filesInputId).files
+    
+    let filesList = []
+    if(filesInputId == 'global-chat-file-upload'){
+        globalFiles['global-chat-file-upload'] = filesList
+    }else {
+        globalFiles[filesInputId] = filesList
+    }
+    console.log(filesInputId)
     let fileNamesContainer = document.getElementById(containerId)
     fileNamesContainer.innerHTML = ''
 
     for (let i = 0; i < files.length; i++) {
+        files[i].id = i;
         filesList.push(files[i])
+        
+        let wrapper = document.createElement('div')
+        wrapper.classList.add('attachment')
+
         let fileName = document.createElement('p')
         let bt = document.createElement('button')
         bt.classList.add('delete_bt')
         bt.innerText = String.fromCharCode(10006)
         bt.innerText.ali
 
-        fileName.classList.add('attachment')
         fileName.innerHTML = files[i].name
 
-        fileNamesContainer.append(fileName)
-        fileNamesContainer.append(bt)
+        wrapper.append(fileName)
+        wrapper.append(bt)
+
+        fileNamesContainer.append(wrapper)
+
+        //event for deleting a file
         bt.onclick = (event) => {
             event.preventDefault()
-            fileName.remove()
-            bt.remove()
-            filesList.splice(filesList[i], 1)
+            wrapper.remove()
+            filesList.splice(getIndexOfFile(filesList, i), 1)
+            console.log(globalFiles[filesInputId])
         }
     }
 };
+
+/**
+ * searches the filesList for an element with the specified id and returns the index where it is in the array
+ * @param {*} files 
+ * @param {*} id 
+ */
+function getIndexOfFile(files, id) {
+    for(let i = 0; i < files.length; i++) {
+        if(files[i].id == id) {
+            console.log(i)
+            return i;
+        }else {
+            console.log("lol not exist")
+        }
+    }
+}
 
 /**the prompt window from the browser to log in the chat with the user name */
 function showUsernamePrompt() {
@@ -389,14 +430,15 @@ function openPrivateChat(id, userName) {
         /**the div for the files before sending that are still to be uploaded */
         const privateFiles = document.createElement('div')
         privateFiles.id = id.toString() + "-privateFiles"
+        privateFiles.style.marginTop = '9px'
 
         /**send the text and the files in the send container to the message
          * send the files or text using the server to the partner in the chat*/
         privateSendContainer.addEventListener('submit', async e => {
             e.preventDefault();
             const message = inputField.value
-            let fileList = getFilesAsHtmlElements(privateUploadInput.files)
-            let fileListB64 = await getBase64FilesList(id.toString() + '-private-upload-input')
+            let fileList = getFilesAsHtmlElements(globalFiles[id.toString() + '-private-upload-input'])
+            let fileListB64 = await getBase64FilesList(globalFiles[id.toString() + '-private-upload-input'])
 
             let msg = null
             if (message.length > 0) {
@@ -412,6 +454,8 @@ function openPrivateChat(id, userName) {
             if (fileList.length > 0) {
                 inputField.value = ''
                 privateUploadInput.value = ''
+
+                delete globalFiles[id.toString() + '-private-upload-input']
 
                 let fileNamesContainer = privateFiles
                 fileNamesContainer.innerHTML = ''
@@ -674,8 +718,8 @@ function openGroupChatWindow(id) {
         inptContainer.addEventListener('submit', async e => {
             e.preventDefault();
             const message = inputField.value
-            let fileList = getFilesAsHtmlElements(groupUploadInput.files)
-            let fileListB64 = await getBase64FilesList(id.toString() + '-group-upload-input')
+            let fileList = getFilesAsHtmlElements(globalFiles[id.toString() + '-group-upload-input'])
+            let fileListB64 = await getBase64FilesList(globalFiles[id.toString() + '-group-upload-input'])
 
             let msg = null
             if (message.length > 0) {
@@ -692,6 +736,7 @@ function openGroupChatWindow(id) {
             if (fileList.length > 0) {
                 inputField.value = ''
                 groupUploadInput.value = ''
+                delete globalFiles[id.toString() + '-group-upload-input']
 
                 let fileNamesContainer = groupFiles
                 fileNamesContainer.innerHTML = ''
@@ -773,7 +818,7 @@ socket.on('group-chat-message', async data => {
             msg.append(document.createElement('br'))
         }
     }
-})
+ })
 
 socket.on('user-left-group', data => {
     appendStaticMessage(data.name + ' has left the group', document.getElementById(data.groupId.toString() + '-chat').childNodes[1])
