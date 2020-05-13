@@ -1,3 +1,11 @@
+/**Group 8
+ * Lars Maronde (764420)
+ * Mariam Lang (764532)
+ * Patrik Keppeler (765058)
+ * Mohammed Kalash (765256)
+ * */
+
+
 html, body {
     background-color: #3b3c40;
     color: white;
@@ -259,6 +267,7 @@ html, body {
     bottom: 0;
     width: 100%;
     position: absolute;
+    overflow: auto;
 }
 
 .createGroupButtons {

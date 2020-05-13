@@ -1,3 +1,11 @@
+/**Group 8
+ * Lars Maronde (764420)
+ * Mariam Lang (764532)
+ * Patrik Keppeler (765058)
+ * Mohammed Kalash (765256)
+ * */
+
+
 var io = require('socket.io')(3000)
 const users = {}
 

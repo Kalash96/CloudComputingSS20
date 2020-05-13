@@ -1,3 +1,11 @@
+/**Group 8
+ * Lars Maronde (764420)
+ * Mariam Lang (764532)
+ * Patrik Keppeler (765058)
+ * Mohammed Kalash (765256)
+ * */
+
+
 const socket = io('http://localhost:3000')
 
 const messageContainer = document.getElementById('message-container')
@@ -437,6 +445,7 @@ function openPrivateChat(id, userName) {
         const privateFiles = document.createElement('div')
         privateFiles.id = id.toString() + "-privateFiles"
         privateFiles.style.marginTop = '9px'
+        privateFiles.style.position = 'absolute'
         privateFiles.style.display = "block ruby"
 
         /**send the text and the files in the send container to the message
@@ -721,6 +730,7 @@ function openGroupChatWindow(id) {
 
         const groupFiles = document.createElement('div')
         groupFiles.style.marginTop = '9px'
+        groupFiles.style.position = 'absolute'
         groupFiles.style.display = "block ruby"
         groupFiles.id = id.toString() + "-groupFiles"
 
