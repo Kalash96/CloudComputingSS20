@@ -133,15 +133,17 @@ function getBase64(file, onLoadCallback) {
 async function getBase64FilesList(fileInput) {
     let files = []
     // let fileInput = document.getElementById(elementId).files
-    let promises = []
-    for (let file of fileInput) {
-        let promise = getBase64(file)
-        promise.then(function (result) {
-            files.push({ name: file.name, data: result })
-        });
-        promises.push(promise)
+    if(fileInput) {
+        let promises = []
+        for (let file of fileInput) {
+            let promise = getBase64(file)
+            promise.then(function (result) {
+                files.push({ name: file.name, data: result })
+            });
+            promises.push(promise)
+        }
+        await Promise.all(promises)
     }
-    await Promise.all(promises)
     return files;
 }
 
@@ -150,6 +152,10 @@ async function getBase64FilesList(fileInput) {
 function getFilesAsHtmlElements(files) {
     let fileList = []
     let fileInput = files
+    //if there are no files
+    if(!fileInput) {
+        return fileList;
+    }
     for (let file of fileInput) {
         if (file.type.startsWith('image/')) {
             const img = document.createElement("img")
@@ -801,7 +807,12 @@ socket.on('group-chat-message', async data => {
     openGroupChatWindow(data.groupId)
     //appendMessage(data.name, data.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1])
 
-    let msg = appendMessage(data.name, data.message.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1])
+    if(!data.message.message && data.message.fileList.length <= 0) {
+        //if msg is empty with no files do nothing
+        return;
+    }else {
+        msg = appendMessage(data.name, data.message.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1])
+    }
 
     let files = []
     for (let url of data.message.fileList) {
