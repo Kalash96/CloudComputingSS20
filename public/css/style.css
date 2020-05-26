@@ -128,7 +128,7 @@ html, body {
 #bt_upload {
     width: 49px;
     height: 20px;
-    background: url(rs/attachment.png) no-repeat;
+    background: url(../rs/attachment.png) no-repeat;
     cursor: pointer;
     position: absolute;
     border: none;
@@ -208,7 +208,7 @@ html, body {
     float: right;
     width: 29px;
     height: 29px;
-    background: url(rs/leave_group.png) no-repeat;
+    background: url(../rs/leave_group.png) no-repeat;
     margin-top: 15px;
     border-radius: 6px;
     border-color: transparent;
@@ -287,7 +287,7 @@ html, body {
 #private-upload-button {
     width: 45px;
     height: 20px;
-    background: url(rs/attachment.png) no-repeat;
+    background: url(../rs/attachment.png) no-repeat;
     cursor: pointer;
     position: absolute;
     border: none;
@@ -308,7 +308,7 @@ html, body {
 #group-upload-button {
     width: 45px;
     height: 20px;
-    background: url(rs/attachment.png) no-repeat;
+    background: url(../rs/attachment.png) no-repeat;
     cursor: pointer;
     position: absolute;
     border: none;
