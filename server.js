@@ -5,9 +5,23 @@
  * Mohammed Kalash (765256)
  * */
 
+var express = require("express");
+var app = express();
+var http = require('http').createServer(app);
+var io = require('socket.io')(http);
 
-var io = require('socket.io')(3000)
 const users = {}
+
+app.use(express.static(__dirname + '/public'));
+app.set("views", __dirname + "/public");
+app.engine("html",require("ejs").renderFile);
+app.set("view engine","html");
+
+app.get("/",function(req,res) {
+    res.render(__dirname + '/index.html')
+});
+
+http.listen(3000);
 
 io.on('connection', socket => {
 
