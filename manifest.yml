@@ -1,0 +1,6 @@
+---
+applications:
+- name: awesome-wozniak
+  memory: 512M
+  instances: 1
+  timeout: 180

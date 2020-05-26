@@ -9,6 +9,7 @@ var express = require("express");
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+let port = process.env.PORT || 3000;
 
 const users = {}
 
@@ -21,7 +22,8 @@ app.get("/",function(req,res) {
     res.render(__dirname + '/index.html')
 });
 
-http.listen(3000);
+
+http.listen(port);
 
 io.on('connection', socket => {
 

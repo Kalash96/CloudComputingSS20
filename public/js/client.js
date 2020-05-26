@@ -4,9 +4,7 @@
  * Patrik Keppeler (765058)
  * Mohammed Kalash (765256)
  * */
-
-
-const socket = io('http://localhost:3000')
+const socket = io(window.location.href)
 
 const messageContainer = document.getElementById('message-container')
 const messageForm = document.getElementById('send-container')
