@@ -334,3 +334,7 @@ html, body {
     padding: 1px 6px;
     margin-left: 5px;
 }
+
+.translationEnabled {
+    color: #00e5ff;
+}

@@ -11,6 +11,8 @@ const messageForm = document.getElementById('send-container')
 const messageInput = document.getElementById('message-input')
 const userList = document.getElementById('userList')
 
+const translationServiceURL = "https://eu-gb.functions.cloud.ibm.com/api/v1/web/Lars.Maronde%40Student.reutlingen-university.de_dev/hrt-demo/identify-and-translate";
+
 //object that stores all the lists of the open files in the chats
 //globalFiles[id] to get the list where the id is the id of the chat/group
 //globalFiles['global-chat-file-upload'] to get the global chat files list
@@ -23,7 +25,7 @@ socket.on('connected', data => {
 })
 
 socket.on('chat-message', async data => {
-    let msg = appendMessage(data.name, data.message.message, messageContainer)
+    let msg = await appendMessage(data.name, data.message.message, messageContainer, true)
     let files = []
     for (let url of data.message.fileList) {
         await fetch(url.data)
@@ -52,7 +54,7 @@ socket.on('private-chat-message', async data => {
         return;
     }else {
         openPrivateChat(data.senderId, data.name)
-        msg = appendMessage(data.name, data.message.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1])
+        msg = await appendMessage(data.name, data.message.message, document.getElementById(data.senderId.toString() + "-chat").childNodes[1], true)
     }
 
     let files = []
@@ -96,31 +98,32 @@ messageForm.addEventListener('submit', async e => {
 
     let msg = null
     if (message.length > 0) {
-        msg = appendMessage('You', message, messageContainer)
+        msg = await appendMessage('You', message, messageContainer, false)
     }
     //if only a file is submitted, the message stays empty
     else if (message.length == 0 && filesList2.length > 0) {
-        msg = appendMessage('You', '', messageContainer)
+        msg = await appendMessage('You', '', messageContainer, false)
     }
     messageInput.value = ''
 
     //send the message to server with the files as an B64 encoded list
     socket.emit('send-chat-message', { message: message, fileList: fileListB64 })
-
-    if (filesList2.length > 0) {
-        //reset the input fields
-        messageInput.value = ''
-        globalFiles['global-chat-file-upload'] = []
-        document.getElementById('global-chat-file-upload').value = ''
-        //reset attachment list
-        let fileNamesContainer = document.getElementById('files')
-        fileNamesContainer.innerHTML = ''
-
-        //display the files in the chat
-        msg.append(document.createElement('br'))
-        for (let i = 0; i < fileListElements.length; i++) {
-            msg.append(fileListElements[i])
+    if(filesList2){
+        if (filesList2.length > 0) {
+            //reset the input fields
+            messageInput.value = ''
+            globalFiles['global-chat-file-upload'] = []
+            document.getElementById('global-chat-file-upload').value = ''
+            //reset attachment list
+            let fileNamesContainer = document.getElementById('files')
+            fileNamesContainer.innerHTML = ''
+    
+            //display the files in the chat
             msg.append(document.createElement('br'))
+            for (let i = 0; i < fileListElements.length; i++) {
+                msg.append(fileListElements[i])
+                msg.append(document.createElement('br'))
+            }
         }
     }
 })
@@ -224,7 +227,6 @@ function getFileName(filesInputId, containerId) {
     }else {
         globalFiles[filesInputId] = filesList
     }
-    console.log(filesInputId)
     let fileNamesContainer = document.getElementById(containerId)
     fileNamesContainer.innerHTML = ''
 
@@ -253,7 +255,6 @@ function getFileName(filesInputId, containerId) {
             event.preventDefault()
             wrapper.remove()
             filesList.splice(getIndexOfFile(filesList, i), 1)
-            console.log(globalFiles[filesInputId])
         }
     }
 };
@@ -266,10 +267,7 @@ function getFileName(filesInputId, containerId) {
 function getIndexOfFile(files, id) {
     for(let i = 0; i < files.length; i++) {
         if(files[i].id == id) {
-            console.log(i)
             return i;
-        }else {
-            console.log("lol not exist")
         }
     }
 }
@@ -288,7 +286,7 @@ function showUsernamePrompt() {
  * create the header for the messages in the message containers with the name of the sender and the timestamp 
  * @param {any} username
  */
-function createMessageHeader(username) {
+function createMessageHeader(username, translate) {
     let header = document.createElement('h2')
 
     let name = document.createElement('span')
@@ -302,30 +300,89 @@ function createMessageHeader(username) {
     timestamp.style.fontSize = '9pt'
     timestamp.classList.add('lightgrey')
     timestamp.innerHTML = time
-
     header.append(timestamp)
+
+    if(translate) {
+        let translateButton = document.createElement('span')
+        translateButton.id = 'translationButton'
+        translateButton.style.fontSize = '8pt'
+        translateButton.style.marginRight = '.5rem'
+        translateButton.style.float="right"
+        translateButton.style.cursor = 'pointer'
+        translateButton.innerHTML = '(übersetzen)'
+        header.append(translateButton)
+    }
+    
     return header
 }
 
+async function translateText(language, text) {
+    var url = new URL(translationServiceURL),
+    params = {text:text, targetTranslationLanguage:language}
+    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+    let answer;
+    try{
+        answer = JSON.parse(await (await fetch(url)).text());
+    }catch (error){
+        return false
+    }
+    if(answer.translations) {
+        return answer.translations.result.translations[0].translation;
+    }
+    //error when translating
+    return false;
+}
 /**
  * add the text with the user name in the container
  * @param {String} username
  * @param {String} text
  * @param {any} container
  */
-function appendMessage(username, text, container) {
-    let header = createMessageHeader(username)
+async function appendMessage(username, text, container, translate) {
+    let header;
+    let translatedText;
+    if(translate) { //enable this so sender doesnt get the translation
+        let locale = navigator.language || navigator.userLanguage; 
+        let translation = await translateText(locale, text);
+        if(translation) {
+            header = createMessageHeader(username, true);
+            translatedText = translation;
+        }else {
+            header = createMessageHeader(username, false);
+        }
+    }else {
+        header = createMessageHeader(username, false);
+    }
 
-    let message = document.createElement('div')
-    message.classList.add('message')
+    let message = document.createElement('div');
+    message.classList.add('message');
 
-    let content = document.createElement('span')
-    content.innerHTML = text
+    let content = document.createElement('span');
+    content.classList.add('original');
+    content.innerHTML = text;
 
-    message.append(header)
-    message.append(content)
+    message.append(header);
+    message.append(content);
+    
+    if(translatedText && translate){
+        let translationButton = header.children[2];
 
-    container.append(message)
+        translationButton.onclick = () => {
+            if(content.classList.contains('original')){
+                content.classList.remove('original');
+                content.innerHTML = translatedText;
+                content.classList.add('translated');
+                translationButton.classList.add('translationEnabled');
+            }else {
+                content.classList.remove('translated');
+                content.innerHTML = text;
+                content.classList.add('original'); 
+                translationButton.classList.remove('translationEnabled');
+            }
+        };
+    }
+
+    container.append(message);
     return message
 }
 
@@ -388,6 +445,7 @@ function openPrivateChat(id, userName) {
         const privateChatHeader = document.createElement('div')
         privateChatHeader.id = id.toString() + '-chat-header'
         privateChatHeader.style.cursor = 'grab'
+        privateChatHeader.style.display = 'block ruby'
 
         /**the name of the private chatroom window should be the name from the user in the list (in the header) */
         const privateChatTitle = document.createElement('h2')
@@ -456,10 +514,10 @@ function openPrivateChat(id, userName) {
 
             let msg = null
             if (message.length > 0) {
-                msg = appendMessage('You', message, privatMessagesContainer)
+                msg = await appendMessage('You', message, privatMessagesContainer, false)
             }
             else if (message.length == 0 && fileList.length > 0) {
-                msg = appendMessage('You', '', privatMessagesContainer)
+                msg = await appendMessage('You', '', privatMessagesContainer, false)
             }
             inputField.value = ''
 
@@ -670,6 +728,8 @@ function openGroupChatWindow(id) {
         const groupChatHeader = document.createElement('div')
         groupChatHeader.id = id.toString() + '-chat-header'
         groupChatHeader.style.cursor = 'grab'
+        groupChatHeader.style.display = 'inline-block'
+        groupChatHeader.style.width = '100%'
 
         const title = document.createElement('h2')
         title.innerHTML = groups[id]
@@ -740,10 +800,10 @@ function openGroupChatWindow(id) {
 
             let msg = null
             if (message.length > 0) {
-                msg = appendMessage('You', message, messagesContainer)
+                msg = await appendMessage('You', message, messagesContainer, false)
             }
             else if (message.length == 0 && fileList.length > 0) {
-                msg = appendMessage('You', '', messagesContainer)
+                msg = await appendMessage('You', '', messagesContainer, false)
             }
 
             inputField.value = ''
@@ -819,7 +879,7 @@ socket.on('group-chat-message', async data => {
         //if msg is empty with no files do nothing
         return;
     }else {
-        msg = appendMessage(data.name, data.message.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1])
+        msg = await appendMessage(data.name, data.message.message, document.getElementById(data.groupId.toString() + "-chat").childNodes[1], false)
     }
 
     let files = []
