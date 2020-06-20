@@ -4,6 +4,8 @@
  * Patrik Keppeler (765058)
  * Mohammed Kalash (765256)
  * */
+ 
+/* 
 var https = require('https');
 var fs = require('fs');
 
@@ -13,14 +15,15 @@ var options = {
     requestCert: false,
     rejectUnauthorized: false
 };
+*/
 
 var express = require("express");
 var app = express();
-// var http = require('http').createServer(app);
+var http = require('http').createServer(app);
 
-var server = https.createServer( options, app );
+// var server = https.createServer( options, app );
 
-var io = require('socket.io')(server);
+var io = require('socket.io')(http);
 let port = process.env.PORT || 3000;
 
 
@@ -36,12 +39,13 @@ app.get("/",function(req,res) {
     res.render(__dirname + '/index.html')
 });
 
-
+/*
 server.listen( port, function () {
     console.log( 'Express server listening on port ' + server.address().port );
 } );
+*/
 
-//http.listen(port);
+http.listen(port);
 
 io.on('connection', socket => {
 
