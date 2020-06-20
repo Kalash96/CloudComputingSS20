@@ -2,13 +2,13 @@
   "_comment": "Group 8 --> Lars Maronde (764420), Mariam Lang (764532), Patrik Keppeler (765058), Mohammed Kalash (765256)",
   "name": "chatapp3",
   "version": "1.0.0",
-  "description": "",
+  "description": "SSL test app",
   "main": "index.js",
   "scripts": {
     "start": "nodemon server.js"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "ejs": "^3.1.3",
     "express": "^4.17.1",
@@ -16,5 +16,13 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kalash96/CloudComputingSS20.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kalash96/CloudComputingSS20/issues"
+  },
+  "homepage": "https://github.com/Kalash96/CloudComputingSS20#readme"
 }
