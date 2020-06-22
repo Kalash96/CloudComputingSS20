@@ -274,10 +274,11 @@ function getIndexOfFile(files, id) {
 
 /**the prompt window from the browser to log in the chat with the user name */
 function showUsernamePrompt() {
-    let name = prompt('What is your name?')
-    while (!name) {
-        name = prompt('What is your name?')
-    }
+    // let name = prompt('What is your name?')
+    // while (!name) {
+    //     name = prompt('What is your name?')
+    // }
+    let name = window.location.search.substr(1).split("=")[1]
     appendStaticMessage(name + ', you joined', messageContainer)
     socket.emit('new-user', name)
 }

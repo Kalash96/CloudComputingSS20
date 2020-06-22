@@ -1,0 +1,31 @@
+body{
+    background-color: #222222;
+}
+
+.window {
+    background-color: rgb(51, 51, 51);
+    width: 400px;
+    margin: 0 auto;
+    margin-top: 10%;
+    padding: 40px;
+    text-align: center;
+
+    border-radius: 25px;
+}
+
+.window input, button {
+    width: 90%;
+    height: 30px;
+    margin-top: 5px;
+}
+
+.buttons {
+    margin-top: 20px;
+}
+
+.title{
+    color: white;
+    font-size: 34pt;
+    margin: 0;
+    margin-bottom: 30px;
+}

@@ -27,13 +27,125 @@ let port = process.env.PORT || 3000;
 const users = {}
 const usersHttps = {}
 
+app.engine('html', require('ejs').renderFile);
 app.use(express.static(__dirname + '/public'));
-app.set("views", __dirname + "/public");
-app.engine("html",require("ejs").renderFile);
-app.set("view engine","html");
+app.set('views', __dirname + '/public');
+app.set('view engine', 'html');
+
+http.listen(port);
+
+const ibmdb = require('ibm_db');
+const cn = "DATABASE=BLUDB;HOSTNAME=dashdb-txn-sbox-yp-lon02-06.services.eu-gb.bluemix.net;PORT=50000;PROTOCOL=TCPIP;UID=bfg85975;PWD=fc7kwr7g+rb8kvcs;"
 
 app.get("/",function(req,res) {
-    res.render(__dirname + '/index.html')
+    res.render('login.html')
+});
+
+app.get("/signup",function(req,res) {
+    res.render('signup.html')
+});
+
+//FOR TESTNG PURPOSES
+app.get('/users',function (req, res){
+    ibmdb.open(cn, function(err, conn) {
+        if(err){
+            console.log(err);
+        }else {
+            let query = 'SELECT * FROM User';
+            conn.query(query, function (err, data) { 
+                if(err) {
+                    console.log(err)
+                    return res.status(400).send("And Error occured");
+                }
+                res.send(data).end();
+            });  
+        }
+    });
+});
+
+
+app.post("/signup", function (req,res) {
+    let username = req.query.username.trim();
+    let pwd = req.query.password.trim();
+
+    console.log(username)
+    console.log(pwd)
+
+    if(username !== '' && pwd !== '') {
+        if(pwd.length < 5){
+            return res.status(400).send("Error: Passwort muss mind. 5 Zeichen lang sein");
+        }
+        var crypto = require('crypto');
+        const hash = crypto.createHash('sha256')
+                   .update(pwd)
+                   .digest('hex');
+
+        ibmdb.open(cn, function(err, conn) {
+            if(err){
+                console.log(err);
+            }else {
+                let query1 = 'SELECT * FROM User WHERE username=\''+username+'\'';
+                conn.query(query1, function (err, data) { 
+                    if(err) {
+                        console.log(err)
+                    }
+                    if(data.length != 0){
+                        return res.status(400).send("Username already taken");
+                    }else {
+                        let query = 'INSERT INTO User(username, password) Values(\''+username+'\',\''+hash+'\')';
+                        conn.query(query, function (err, data) { 
+                            if(err) {
+                                console.log(err)
+                                return res.status(400).send("Username already taken");
+                            }
+                            res.status(200).end();
+                        });  
+                    }
+                }); 
+            }
+        });
+
+    }else {
+        return res.status(400).send("Error: Username and password required");
+    }
+});
+
+app.get("/chat",function(req,res) {
+    res.render('chat.html')
+});
+
+app.get("/login", function (req, res) { 
+    let username = req.query.username.trim();
+    let pwd = req.query.password.trim();
+    
+    if(username !== '' && pwd !== '') {
+        var crypto = require('crypto');
+        const hash = crypto.createHash('sha256')
+                   .update(pwd)
+                   .digest('hex');
+        
+        ibmdb.open(cn, function(err, conn) {
+            if(err){
+                console.log(err);
+            }else {
+                let query = 'SELECT * FROM User WHERE USERNAME=\''+username+'\' AND PASSWORD=\''+hash+'\'';
+                conn.query(query, function (err, data) { 
+                    if(err) {
+                        return res.status(400).send("And Error occured");
+                    }
+                    if(data.length == 0) { //user does not exist
+                        return res.status(401).send("Error: Wrong password");
+                    }else {
+                        //user exists, render the chat page
+                        res.status(200).end();
+                        // return res.render('chat') //NOT WORKING
+                    }
+                });  
+            }
+        });
+    }else {
+        return res.status(400).send("Error: Username and password required");
+    }
 });
 
 
@@ -41,30 +153,9 @@ server.listen(3001, function () {
     console.log('Express server listening on port ' + server.address().port);
 } );
 
-const ibmdb = require('ibm_db');
-const cn = "DATABASE=BLUDB;HOSTNAME=dashdb-txn-sbox-yp-lon02-06.services.eu-gb.bluemix.net;PORT=50000;PROTOCOL=TCPIP;UID=bfg85975;PWD=fc7kwr7g+rb8kvcs;"
 
-app.get('/db', (req, res) => {
-    ibmdb.open(cn, function(err, conn){
-        if(err){
-            console.log(err);
-        }else {
-            conn.query('SELECT * FROM User;', function (err, data) { 
-                if(err) {
-                    console.log(err)
-                }
-                console.log(data);
-            });  
-        }
-    });
-    res.end("...")
-});
-
-
-http.listen(port);
 
 io.on('connection', socket => {
-
     socket.on('new-user', name => {
         users[socket.id] = name
         socket.emit('connected', users)
