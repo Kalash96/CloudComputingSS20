@@ -4,31 +4,30 @@
  * Patrik Keppeler (765058)
  * Mohammed Kalash (765256)
  * */
- 
-/* 
-var https = require('https');
-var fs = require('fs');
-
-var options = {
-    key: fs.readFileSync( './localhost.key' ),
-    cert: fs.readFileSync( './localhost.cert' ),
-    requestCert: false,
-    rejectUnauthorized: false
-};
-*/
 
 var express = require("express");
 var app = express();
 var http = require('http').createServer(app);
 
-// var server = https.createServer( options, app );
+var https = require('https');
+var fs = require('fs');
+
+var options = {
+    key: fs.readFileSync('key.pem'),
+    cert: fs.readFileSync('cert.pem'),
+    requestCert: false,
+    rejectUnauthorized: false
+};
+var server = https.createServer( options, app );
 
 var io = require('socket.io')(http);
+var ioHttps = require('socket.io')(server);
 let port = process.env.PORT || 3000;
 
 
 
 const users = {}
+const usersHttps = {}
 
 app.use(express.static(__dirname + '/public'));
 app.set("views", __dirname + "/public");
@@ -39,11 +38,11 @@ app.get("/",function(req,res) {
     res.render(__dirname + '/index.html')
 });
 
-/*
-server.listen( port, function () {
-    console.log( 'Express server listening on port ' + server.address().port );
+
+server.listen(3001, function () {
+    console.log('Express server listening on port ' + server.address().port);
 } );
-*/
+
 
 http.listen(port);
 
@@ -85,7 +84,7 @@ io.on('connection', socket => {
     })
 
     socket.on('send-group-message', (groupId, message) => {
-        socket.broadcast.to(groupId).emit('group-chat-message', {message: message, groupId:groupId, name: users[socket.id]});
+        socket.broadcast.to(groupId).emit('group-chat-message', { message: message, groupId: groupId, name: users[socket.id]});
     })
 
     socket.on('leave-group', id => {
@@ -94,3 +93,50 @@ io.on('connection', socket => {
     })
 })
 
+
+ioHttps.on('connection', socket => {
+
+    socket.on('new-user', name => {
+        usersHttps[socket.id] = name
+        socket.emit('connected', usersHttps)
+        socket.broadcast.emit('user-connected', { username: name, userlist: usersHttps })
+    })
+
+    socket.on('send-chat-message', message => {
+        socket.broadcast.emit('chat-message', { message: message, name: usersHttps[socket.id] })
+    })
+
+    socket.on('disconnect', () => {
+        let name = usersHttps[socket.id]
+        delete usersHttps[socket.id]
+        socket.broadcast.emit('user-disconnected', { username: name, userlist: usersHttps })
+
+    })
+
+    socket.on('send-private-chat-message', (id, message) => {
+        ioHttps.to(id).emit('private-chat-message', { message: message, name: usersHttps[socket.id], senderId: socket.id })
+    })
+
+    socket.on('create-group', (id, name, httpsUsers) => {
+        socket.join(id);
+        for (let userId in httpsUsers) {
+            if (userId != socket.id) {
+                ioHttps.to(userId).emit('new-group', { id: id, name: name, users: httpsUsers })
+            }
+        }
+    })
+
+    socket.on('join-group', id => {
+        socket.join(id);
+        //maybe send a static "Joined group message here"
+    })
+
+    socket.on('send-group-message', (groupId, message) => {
+        socket.broadcast.to(groupId).emit('group-chat-message', { message: message, groupId: groupId, name: usersHttps[socket.id] });
+    })
+
+    socket.on('leave-group', id => {
+        socket.leave(id);
+        socket.broadcast.to(id).emit('user-left-group', { groupId: id, name: usersHttps[socket.id] });
+    })
+})
