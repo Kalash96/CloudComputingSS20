@@ -24,8 +24,6 @@ var io = require('socket.io')(http);
 var ioHttps = require('socket.io')(server);
 let port = process.env.PORT || 3000;
 
-
-
 const users = {}
 const usersHttps = {}
 
@@ -42,6 +40,25 @@ app.get("/",function(req,res) {
 server.listen(3001, function () {
     console.log('Express server listening on port ' + server.address().port);
 } );
+
+const ibmdb = require('ibm_db');
+const cn = "DATABASE=BLUDB;HOSTNAME=dashdb-txn-sbox-yp-lon02-06.services.eu-gb.bluemix.net;PORT=50000;PROTOCOL=TCPIP;UID=bfg85975;PWD=fc7kwr7g+rb8kvcs;"
+
+app.get('/db', (req, res) => {
+    ibmdb.open(cn, function(err, conn){
+        if(err){
+            console.log(err);
+        }else {
+            conn.query('SELECT * FROM User;', function (err, data) { 
+                if(err) {
+                    console.log(err)
+                }
+                console.log(data);
+            });  
+        }
+    });
+    res.end("...")
+});
 
 
 http.listen(port);
