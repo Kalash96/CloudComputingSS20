@@ -5,7 +5,7 @@
   "description": "SSL test app",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "node server.js"
   },
   "author": "",
   "license": "MIT",
