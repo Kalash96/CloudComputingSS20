@@ -45,6 +45,13 @@ app.get("/signup",function(req,res) {
     res.render('signup.html')
 });
 
+// implement the Content Security Policy (CSP) header
+app.use(function (req, res, next) {
+    res.setHeader("Content-Security-Policy", "script-src 'self' http://group8chatapp-pipeline.eu-gb.mybluemix.net/");
+    return next();
+});
+
+
 //FOR TESTNG PURPOSES
 app.get('/users',function (req, res){
     ibmdb.open(cn, function(err, conn) {
