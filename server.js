@@ -51,6 +51,13 @@ app.use(function (req, res, next) {
     return next();
 });
 
+app.use(express.static(__dirname + '/'));
+
+
+// implement the X-XSS-Protection header
+// and force the header to be set to 1; mode = block
+const xss = require('x-xss-protection')
+app.use(xss({ setOnOldIE: true }))
 
 //FOR TESTNG PURPOSES
 app.get('/users',function (req, res){
