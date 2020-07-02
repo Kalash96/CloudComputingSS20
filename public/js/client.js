@@ -4,7 +4,7 @@
  * Patrik Keppeler (765058)
  * Mohammed Kalash (765256)
  * */
-const socket = io(window.location.href)
+const socket = io(window.location.href.split('/')[2])
 
 const messageContainer = document.getElementById('message-container')
 const messageForm = document.getElementById('send-container')
@@ -281,7 +281,6 @@ function showUsernamePrompt() {
     let name = window.location.search.substr(1).split("=")[1]
     appendStaticMessage(name + ', you joined', messageContainer)
     socket.emit('new-user', name)
-	console.log(socket.emit('new-user', name))
 }
 
 /**
