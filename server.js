@@ -59,6 +59,19 @@ app.use(express.static(__dirname + '/'));
 const xss = require('x-xss-protection')
 app.use(xss({ setOnOldIE: true }))
 
+
+/**
+* implement the hsts header
+* for 180 days the browser should visit only by HTTPS
+* this protects against the man-in-the-middle attacks
+*/
+const hsts = require('hsts')
+
+app.use(hsts({
+  maxAge: 15552000  // 180 days in seconds
+}))
+
+
 //FOR TESTNG PURPOSES
 app.get('/users',function (req, res){
     ibmdb.open(cn, function(err, conn) {

@@ -281,6 +281,7 @@ function showUsernamePrompt() {
     let name = window.location.search.substr(1).split("=")[1]
     appendStaticMessage(name + ', you joined', messageContainer)
     socket.emit('new-user', name)
+	console.log(socket.emit('new-user', name))
 }
 
 /**
