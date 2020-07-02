@@ -82,9 +82,11 @@ app.get('/users',function (req, res){
             conn.query(query, function (err, data) { 
                 if(err) {
                     console.log(err)
+                    conn.close();
                     return res.status(400).send("And Error occured");
                 }
                 res.send(data).end();
+                conn.close();
             });  
         }
     });
@@ -114,6 +116,7 @@ app.post("/signup", function (req,res) {
                 let query1 = 'SELECT * FROM User WHERE username=\''+username+'\'';
                 conn.query(query1, function (err, data) { 
                     if(err) {
+                        conn.close();
                         console.log(err)
                     }
                     if(data.length != 0){
@@ -123,9 +126,11 @@ app.post("/signup", function (req,res) {
                         conn.query(query, function (err, data) { 
                             if(err) {
                                 console.log(err)
+                                conn.close();
                                 return res.status(400).send("Username already taken");
                             }
                             res.status(200).end();
+                            conn.close();
                         });  
                     }
                 }); 
@@ -153,17 +158,21 @@ app.get("/login", function (req, res) {
         
         ibmdb.open(cn, function(err, conn) {
             if(err){
+                conn.close();
                 console.log(err);
             }else {
                 let query = 'SELECT * FROM User WHERE USERNAME=\''+username+'\' AND PASSWORD=\''+hash+'\'';
                 conn.query(query, function (err, data) { 
                     if(err) {
+                        conn.close();
                         return res.status(400).send("And Error occured");
                     }
                     if(data.length == 0) { //user does not exist
+                        conn.close();
                         return res.status(401).send("Error: Wrong password");
                     }else {
                         //user exists, render the chat page
+                        conn.close();
                         res.status(200).end();
                         // return res.render('chat') //NOT WORKING
                     }
