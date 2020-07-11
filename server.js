@@ -8,9 +8,16 @@
 var express = require("express");
 var app = express();
 var http = require('http').createServer(app);
-
 var https = require('https');
 var fs = require('fs');
+var io = require('socket.io')(http);
+
+const redisAdapter = require('socket.io-redis');
+const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
+console.log(REDIS_HOST + " - " + REDIS_PORT);
+io.adapter(redisAdapter({ host: 'redis', port: REDIS_PORT }));
+
 
 var options = {
     key: fs.readFileSync('key.pem'),
@@ -18,11 +25,12 @@ var options = {
     requestCert: false,
     rejectUnauthorized: false
 };
-var server = https.createServer( options, app );
 
-var io = require('socket.io')(http);
+var server = https.createServer( options, app );
 var ioHttps = require('socket.io')(server);
-let port = process.env.PORT || 3000;
+
+
+const port = process.env.PORT || 3000;
 
 const users = {}
 const usersHttps = {}
@@ -192,6 +200,7 @@ server.listen(3001, function () {
 
 
 io.on('connection', socket => {
+
     socket.on('new-user', name => {
         users[socket.id] = name
         socket.emit('connected', users)
