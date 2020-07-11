@@ -1,24 +1,20 @@
 version: '3'
 services:
-  webapp:
-    build: .
+  
+  traefik:
+    image: traefik:latest
+    # Enables the web UI and tells Traefik to listen to docker
+    command: --api.insecure=true --providers.docker
     ports:
-      - 3000:3000
-      - 3001:3001
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - backend
-    depends_on:
-      - redis
-
-  webapp2:
-    build: .
-    ports:
-      - 3003:3000
-      - 3004:3001
-    networks:
-      - backend
-    depends_on:
-      - redis
 
   redis:
     image: redis:latest
@@ -26,6 +22,34 @@ services:
       - backend
     ports:
       - "6379"
+
+
+  webapp:
+    build: .
+    networks:
+      - backend
+    depends_on:
+      - redis
+    labels:
+      - 'traefik.frontend.rule=Host:webapp.test'
+      - 'traefik.enable=true'
+      - 'traefik.backend=webapp'
+      - 'traefik.port=3000'
+      - 'traefik.docker.network=backend'
+
+  webapp2:
+    build: .
+    networks:
+      - backend
+    depends_on:
+      - redis
+    labels:
+      - 'traefik.frontend.rule=Host:webapp.test'
+      - 'traefik.enable=true'
+      - 'traefik.backend=webapp'
+      - 'traefik.port=3000'
+      - 'traefik.docker.network=backend'
+
 
 networks:
   backend:
