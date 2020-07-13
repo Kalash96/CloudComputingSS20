@@ -204,6 +204,8 @@ server.listen(3001, function () {
 
 io.on('connection', socket => {
 
+    socket.emit('serverId', process.env.CF_INSTANCE_GUID || 'default server');
+
     socket.on('new-user', name => {
         users[socket.id] = name
         socket.emit('connected', users)

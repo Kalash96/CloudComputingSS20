@@ -20,6 +20,11 @@ let globalFiles = {}
 
 showUsernamePrompt()
 
+socket.on('serverId', data => {
+    alert(data);
+});
+
+
 socket.on('connected', data => {
     refreshUserList(data)
 })
