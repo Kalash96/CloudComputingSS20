@@ -257,7 +257,7 @@ io.on('connection', socket => {
 ioHttps.on('connection', socket => {
 
     if(usersHttps[socket.id] == null){
-        socket.emit('serverId', process.env.CF_INSTANCE_GUID || 'default server');
+        io.to(socket.id).emit('serverId', process.env.CF_INSTANCE_GUID || 'default server');
     }
 
     socket.on('new-user', name => {
