@@ -133,6 +133,11 @@ messageForm.addEventListener('submit', async e => {
     }
 })
 
+document.getElementById("bt_upload").addEventListener("click", function(){
+	document.getElementById('global-chat-file-upload').click();
+	return false
+});
+
 //returns a promise of a file that is converted into Base64 encoding
 function getBase64(file, onLoadCallback) {
     return new Promise(function (resolve, reject) {
@@ -681,15 +686,25 @@ function closeCreateGroupWindow() {
     document.getElementById('createGroupModal').style.display = 'none'
 }
 
+document.getElementById("close_group_window").addEventListener("click", function(){
+	document.getElementById('createGroupModal').style.display = 'none'
+});
+
 function abortCreateGroup() {
     closeCreateGroupWindow()
     //clear the array
     groupParticipants = {}
 }
 
+document.getElementById("abortCreateGroup").addEventListener("click", function(){
+	closeCreateGroupWindow()
+    //clear the array
+    groupParticipants = {}
+});
+
 //stores all the current groups of the user (id/name)
 groups = {}
-function createGroup() {
+document.getElementById("createGroup").addEventListener("click", function(){
     if (Object.keys(groupParticipants).length <= 0) {
         alert("Du musst zuerst Teilnehmer auswählen")
 
@@ -712,7 +727,7 @@ function createGroup() {
         //reset
         groupParticipants = {}
     }
-}
+});
 
 function addGroupToList(id, groupname) {
     let groupList = document.getElementById('groupList')

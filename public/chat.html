@@ -25,7 +25,7 @@
     <form id="send-container">
         <input type="text" id="message-input" placeholder="Nachricht...">
         <button type="submit" id="send-button">Send</button>
-        <button id="bt_upload" onClick="document.getElementById('global-chat-file-upload').click(); return false"></button>
+        <button id="bt_upload"></button>
         <input type="file" multiple="true" id="global-chat-file-upload" onchange="getFileName('global-chat-file-upload', 'files')" name="file[]">
         <div class="files" id="files"></div>
     </form>
@@ -53,8 +53,8 @@
         <div class="createGroupButtons">
             <h3>Group name: </h3>
             <input id="groupName" class="groupNameInput" />
-            <button onclick="createGroup()">Erstellen</button>
-            <button onclick="abortCreateGroup()">Abbrechen</button>
+            <button id="createGroup">Erstellen</button>
+            <button id="abortCreateGroup">Abbrechen</button>
 
         </div>
     </div>
