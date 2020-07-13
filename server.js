@@ -13,10 +13,13 @@ var fs = require('fs');
 var io = require('socket.io')(http);
 
 const redisAdapter = require('socket.io-redis');
-const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
-console.log(REDIS_HOST + " - " + REDIS_PORT);
-io.adapter(redisAdapter({ host: 'redis', port: REDIS_PORT }));
+
+const REDIS_HOST = "redis-10002.c2.eu-west-1-3.ec2.cloud.redislabs.com";
+const REDIS_PORT = 10002;
+const REDIS_PW = "0EPzzFetOEBL3sfUyoYjiZb9QT1fesNG";
+const REDIS_USERNAME = "User";
+
+io.adapter(redisAdapter(`redis://${REDIS_USERNAME}:${REDIS_PW}@${REDIS_HOST}:${REDIS_PORT}`))
 
 
 var options = {

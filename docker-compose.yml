@@ -1,55 +1,61 @@
 version: '3'
 services:
   
-  traefik:
-    image: traefik:latest
-    # Enables the web UI and tells Traefik to listen to docker
-    command: --api.insecure=true --providers.docker
-    ports:
-      # The HTTP port
-      - "80:80"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
-    volumes:
-      # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - backend
+  # traefik:
+  #   image: traefik:latest
+  #   command:
+  #     - --api.insecure=true
+  #     - --providers.docker=true
+  #   ports:
+  #     - "80:80"
+  #     - "8080:8080"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   networks:
+  #     - backend
 
-  redis:
-    image: redis:latest
-    networks:
-      - backend
-    ports:
-      - "6379"
-
+  # redis:
+  #   image: redis:latest
+  #   networks:
+  #     - backend
+  #   ports:
+  #     - "6379"
 
   webapp:
     build: .
     networks:
       - backend
-    depends_on:
-      - redis
-    labels:
-      - 'traefik.frontend.rule=Host:webapp.test'
-      - 'traefik.enable=true'
-      - 'traefik.backend=webapp'
-      - 'traefik.port=3000'
-      - 'traefik.docker.network=backend'
+    ports:
+      - "3000:3000"
+      - "3001:3001"
 
-  webapp2:
-    build: .
-    networks:
-      - backend
-    depends_on:
-      - redis
-    labels:
-      - 'traefik.frontend.rule=Host:webapp.test'
-      - 'traefik.enable=true'
-      - 'traefik.backend=webapp'
-      - 'traefik.port=3000'
-      - 'traefik.docker.network=backend'
+  # webapp2:
+  #   build: .
+  #   networks:
+  #     - backend
+  #   ports:
+  #     - "3003:3000"
+  #     - "3004:3001"
 
+  # webapp:
+  #   build: .
+  #   networks:
+  #     - backend
+    # depends_on:
+    #   - redis
+    # labels:
+    #   - traefik.frontend.rule=Host:chatapp.localhost
+    #   - traefik.backend=backend
+
+  # webapp2:
+  #   build: .
+  #   networks:
+  #     - backend
+    # depends_on:
+    #   - redis
+    # labels:
+    #   - traefik.frontend.rule=Host:chatapp.localhost
+    #   - traefik.backend=backend
 
 networks:
   backend:
