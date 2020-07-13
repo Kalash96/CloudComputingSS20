@@ -651,6 +651,32 @@ function showCreateGroupWindow() {
     }
 }
 
+document.getElementById("createGroupButton").addEventListener("click", function(){
+	const modal = document.getElementById('createGroupModal')
+    modal.style.display = 'block'
+    let groupUserList = document.getElementById('newGroupChatUserList')
+    groupUserList.innerHTML = ''
+
+    let userListNodes = userList.childNodes
+    for (let i = 0; i < userListNodes.length; i++) {
+        let node = userListNodes[i].cloneNode(true)
+        if (node.id == socket.id) {
+            continue;
+        }
+        node.onclick = () => {
+            if (node.style.backgroundColor != 'green') {
+                node.style.backgroundColor = 'green'
+                groupParticipants[node.id] = node.innerHTML
+            } else {
+                node.style.backgroundColor = ''
+                delete groupParticipants[node.id]
+            }
+        }
+        groupUserList.append(node)
+    }
+});
+
+
 function closeCreateGroupWindow() {
     document.getElementById('createGroupModal').style.display = 'none'
 }
