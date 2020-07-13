@@ -205,7 +205,7 @@ server.listen(3001, function () {
 io.on('connection', socket => {
 
     if(users[socket.id] == null){
-        socket.emit('serverId', process.env.CF_INSTANCE_GUID || 'default server');
+        io.to(socket.id).emit('serverId', process.env.CF_INSTANCE_GUID || 'default server');
     }
 
     socket.on('new-user', name => {
