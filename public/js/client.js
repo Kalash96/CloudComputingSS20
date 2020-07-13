@@ -21,7 +21,7 @@ let globalFiles = {}
 showUsernamePrompt()
 
 socket.on('serverId', data => {
-    alert(data);
+    alert("Server: " + data);
 });
 
 
